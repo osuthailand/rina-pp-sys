@@ -436,7 +436,9 @@ impl OsuPpInner {
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-
+        // println!("aim_value: {}", aim_value);
+        // println!("speed_value: {}", speed_value);
+        // println!("acc_value: {}", acc_value);
         let pp = (aim_value.powf(1.1)
             + speed_value.powf(1.1)
             + acc_value.powf(1.1)
@@ -479,13 +481,21 @@ impl OsuPpInner {
         let ar_factor = if self.attrs.ar > 10.33 {
             0.3 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
-            0.05 * (8.0 - self.attrs.ar)
+            if self.mods.rx() {
+                0.01 * (8.0 - self.attrs.ar)
+            } else {
+                0.05 * (8.0 - self.attrs.ar)
+            }
         } else {
             0.0
         };
 
-        // * Buff for longer maps with high AR.
-        aim_value *= 1.0 + ar_factor * len_bonus;
+        if self.mods.rx() {
+            aim_value *= 1.0 + ar_factor;
+        } else {
+            // * Buff for longer maps with high AR.
+            aim_value *= 1.0 + ar_factor * len_bonus
+        }
 
         if self.mods.hd() {
             // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
@@ -574,14 +584,20 @@ impl OsuPpInner {
         };
 
         // * Scale the speed value with accuracy and OD.
-        speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
+        if self.mods.rx() {
+            speed_value *=
+                1_f64 + (0.95 / 750.0) * ((self.acc + relevant_acc) / 2.0).powf((6.5) / 2.0);
+        } else {
+            speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
+                * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
+        }
 
         // * Scale the speed value with # of 50s to punish doubletapping.
-        speed_value *= 0.99_f64.powf(
-            (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
-                * (self.state.n50 as f64 - total_hits / 500.0),
-        );
+        // akatsuki osu_2019 used 0.98
+        // speed_value *= 0.99_f64.powf(
+        //     (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
+        //         * (self.state.n50 as f64 - total_hits / 500.0),
+        // );
 
         speed_value
     }
@@ -611,12 +627,31 @@ impl OsuPpInner {
 
         // * Lots of arbitrary values from testing.
         // * Considering to use derivation from perfect accuracy in a probabilistic manner - assume normal distribution.
-        let mut acc_value = 1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83;
+        //let mut acc_value = 1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83;
+        // let mut acc_value = 1.52163_f64.powf(self.attrs.ar) * better_acc_percentage.powi(24);
+
+        //akatsuki osu_2019
+        //let better_acc_percentage = (n_circles > 0.0) as u8 as f32
+        //    * (((n300 - (total_hits - n_circles)) * 6.0 + n100 * 2.0 + n50) / (n_circles * 6.0))
+        //        .max(0.0);
+
+        let mut acc_value = if self.mods.rx() {
+            if better_acc_percentage >= 0.98 {
+                1.52163_f64.powf(self.attrs.ar) * better_acc_percentage.powi(12)
+            } else {
+                1.1_f64.powf(self.attrs.ar) * better_acc_percentage.powi(10)
+            }
+        } else {
+            1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83
+        };
 
         // * Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
-        acc_value *= (amount_hit_objects_with_acc as f64 / 1000.0)
-            .powf(0.3)
-            .min(1.15);
+
+        if amount_hit_objects_with_acc > 1000 {
+            acc_value *= (amount_hit_objects_with_acc as f64 / 1000.0)
+                .powf(0.3)
+                .min(1.15);
+        }
 
         // * Increasing the accuracy value by object count for Blinds isn't ideal, so the minimum buff is given.
         if self.mods.hd() {
@@ -649,19 +684,32 @@ impl OsuPpInner {
         flashlight_value *= self.get_combo_scaling_factor();
 
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
-        flashlight_value *= 0.7
-            + 0.1 * (total_hits / 200.0).min(1.0)
-            + (total_hits > 200.0) as u8 as f64 * 0.2 * ((total_hits - 200.0) / 200.0).min(1.0);
+        if self.mods.rx() {
+            flashlight_value *= 0.6
+                + 0.1 * (total_hits / 200.0).min(1.0)
+                + (total_hits > 200.0) as u8 as f64 * 0.2 * ((total_hits - 200.0) / 200.0).min(1.0);
 
-        // * Scale the flashlight value with accuracy _slightly_.
-        flashlight_value *= 0.5 + self.acc / 2.0;
-        // * It is important to also consider accuracy difficulty when doing that.
-        flashlight_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
+            flashlight_value *= 0.4 + self.acc / 2.0;
+            flashlight_value *= 0.8 + self.attrs.od * self.attrs.od / 2500.0;
+        } else {
+            flashlight_value *= 0.7
+                + 0.1 * (total_hits / 200.0).min(1.0)
+                + (total_hits > 200.0) as u8 as f64 * 0.2 * ((total_hits - 200.0) / 200.0).min(1.0);
+
+            // * Scale the flashlight value with accuracy _slightly_.
+            flashlight_value *= 0.5 + self.acc / 2.0;
+            // * It is important to also consider accuracy difficulty when doing that.
+            flashlight_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
+        }
 
         flashlight_value
     }
 
     fn get_combo_scaling_factor(&self) -> f64 {
+        if self.mods.rx() {
+            return 1.0;
+        }
+
         if self.attrs.max_combo == 0 {
             1.0
         } else {
