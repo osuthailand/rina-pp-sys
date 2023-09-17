@@ -22,7 +22,7 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, taiko::TaikoGradualDifficultyAttributes};
+/// use rina_pp::{Beatmap, taiko::TaikoGradualDifficultyAttributes};
 ///
 /// # /*
 /// let map: Beatmap = ...

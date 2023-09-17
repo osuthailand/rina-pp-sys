@@ -52,7 +52,7 @@ impl CatchScoreState {
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, catch::{CatchGradualPerformanceAttributes, CatchScoreState}};
+/// use rina_pp::{Beatmap, catch::{CatchGradualPerformanceAttributes, CatchScoreState}};
 ///
 /// # /*
 /// let map: Beatmap = ...

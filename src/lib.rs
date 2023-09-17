@@ -5,7 +5,7 @@
 //! ## Usage
 //!
 //! ```no_run
-//! use rosu_pp::{Beatmap, BeatmapExt};
+//! use rina_pp::{Beatmap, BeatmapExt};
 //!
 //! # /*
 //! // Parse the map yourself
@@ -53,7 +53,7 @@
 //! If either the `async_tokio` or `async_std` feature is enabled, beatmap parsing will be async.
 //!
 //! ```no_run
-//! use rosu_pp::{Beatmap, BeatmapExt};
+//! use rina_pp::{Beatmap, BeatmapExt};
 //!
 //! # /*
 //! // Parse the map asynchronously
@@ -82,7 +82,7 @@
 //! Instead, you should use [`GradualDifficultyAttributes`] and [`GradualPerformanceAttributes`]:
 //!
 //! ```no_run
-//! use rosu_pp::{
+//! use rina_pp::{
 //!     Beatmap, BeatmapExt, GradualPerformanceAttributes, ScoreState,
 //!     taiko::TaikoScoreState,
 //! };

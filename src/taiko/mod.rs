@@ -33,7 +33,7 @@ const DIFFICULTY_MULTIPLIER: f64 = 1.35;
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{TaikoStars, Beatmap};
+/// use rina_pp::{TaikoStars, Beatmap};
 ///
 /// # /*
 /// let map: Beatmap = ...

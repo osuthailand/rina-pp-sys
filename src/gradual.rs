@@ -18,7 +18,7 @@ use crate::{
 /// # Example
 ///
 /// ```no_run
-/// use rosu_pp::{Beatmap, GradualDifficultyAttributes};
+/// use rina_pp::{Beatmap, GradualDifficultyAttributes};
 ///
 /// # /*
 /// let map: Beatmap = ...
@@ -218,7 +218,7 @@ impl From<ScoreState> for ManiaScoreState {
 /// # Example
 ///
 /// ```no_run
-/// use rosu_pp::{Beatmap, GradualPerformanceAttributes, ScoreState};
+/// use rina_pp::{Beatmap, GradualPerformanceAttributes, ScoreState};
 ///
 /// # /*
 /// let map: Beatmap = ...

@@ -26,7 +26,7 @@ const CATCHER_SIZE: f32 = 106.75;
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{CatchStars, Beatmap};
+/// use rina_pp::{CatchStars, Beatmap};
 ///
 /// # /*
 /// let map: Beatmap = ...

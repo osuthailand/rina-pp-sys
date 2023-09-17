@@ -27,7 +27,7 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, osu::OsuGradualDifficultyAttributes};
+/// use rina_pp::{Beatmap, osu::OsuGradualDifficultyAttributes};
 ///
 /// # /*
 /// let map: Beatmap = ...

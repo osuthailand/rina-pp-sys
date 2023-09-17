@@ -6,7 +6,7 @@ use crate::{Beatmap, DifficultyAttributes, Mods, OsuPP, PerformanceAttributes};
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{CatchPP, Beatmap};
+/// use rina_pp::{CatchPP, Beatmap};
 ///
 /// # /*
 /// let map: Beatmap = ...

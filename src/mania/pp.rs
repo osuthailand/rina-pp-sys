@@ -10,7 +10,7 @@ use crate::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{ManiaPP, Beatmap};
+/// use rina_pp::{ManiaPP, Beatmap};
 ///
 /// # /*
 /// let map: Beatmap = ...

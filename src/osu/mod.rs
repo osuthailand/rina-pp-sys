@@ -33,7 +33,7 @@ const PLAYFIELD_BASE_SIZE: Pos2 = Pos2 { x: 512.0, y: 384.0 };
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{OsuStars, Beatmap};
+/// use rina_pp::{OsuStars, Beatmap};
 ///
 /// # /*
 /// let map: Beatmap = ...

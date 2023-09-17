@@ -26,7 +26,7 @@ const STAR_SCALING_FACTOR: f64 = 0.018;
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{ManiaStars, Beatmap};
+/// use rina_pp::{ManiaStars, Beatmap};
 ///
 /// # /*
 /// let map: Beatmap = ...

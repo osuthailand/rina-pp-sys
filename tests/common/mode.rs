@@ -1,4 +1,4 @@
-use rosu_pp::{
+use rina_pp::{
     catch::CatchDifficultyAttributes, mania::ManiaDifficultyAttributes,
     osu::OsuDifficultyAttributes, taiko::TaikoDifficultyAttributes,
 };

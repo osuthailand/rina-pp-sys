@@ -29,7 +29,7 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, catch::CatchGradualDifficultyAttributes};
+/// use rina_pp::{Beatmap, catch::CatchGradualDifficultyAttributes};
 ///
 /// # /*
 /// let map: Beatmap = ...

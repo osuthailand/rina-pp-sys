@@ -26,7 +26,7 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, mania::ManiaGradualDifficultyAttributes};
+/// use rina_pp::{Beatmap, mania::ManiaGradualDifficultyAttributes};
 ///
 /// # /*
 /// let map: Beatmap = ...

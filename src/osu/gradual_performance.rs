@@ -67,7 +67,7 @@ impl OsuScoreState {
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, osu::{OsuGradualPerformanceAttributes, OsuScoreState}};
+/// use rina_pp::{Beatmap, osu::{OsuGradualPerformanceAttributes, OsuScoreState}};
 ///
 /// # /*
 /// let map: Beatmap = ...

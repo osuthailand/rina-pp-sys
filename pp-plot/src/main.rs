@@ -9,7 +9,7 @@ use plotters::{
     },
     style::WHITE,
 };
-use rosu_pp::{Beatmap, BeatmapExt, PerformanceAttributes};
+use rina_pp::{Beatmap, BeatmapExt, PerformanceAttributes};
 use serde::Deserialize;
 use tokio::{fs::File, runtime::Runtime};
 
@@ -302,7 +302,7 @@ impl Evaluator {
 enum Error {
     DrawingArea(String),
     Io(std::io::Error),
-    ParseMap(rosu_pp::ParseError),
+    ParseMap(rina_pp::ParseError),
 }
 
 impl fmt::Display for Error {
@@ -337,8 +337,8 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<rosu_pp::ParseError> for Error {
-    fn from(e: rosu_pp::ParseError) -> Self {
+impl From<rina_pp::ParseError> for Error {
+    fn from(e: rina_pp::ParseError) -> Self {
         Self::ParseMap(e)
     }
 }

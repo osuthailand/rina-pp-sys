@@ -65,7 +65,7 @@ impl TaikoScoreState {
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, taiko::{TaikoGradualPerformanceAttributes, TaikoScoreState}};
+/// use rina_pp::{Beatmap, taiko::{TaikoGradualPerformanceAttributes, TaikoScoreState}};
 ///
 /// # /*
 /// let map: Beatmap = ...

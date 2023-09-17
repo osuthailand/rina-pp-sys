@@ -68,7 +68,7 @@ impl ManiaScoreState {
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, mania::{ManiaGradualPerformanceAttributes, ManiaScoreState}};
+/// use rina_pp::{Beatmap, mania::{ManiaGradualPerformanceAttributes, ManiaScoreState}};
 ///
 /// # /*
 /// let map: Beatmap = ...

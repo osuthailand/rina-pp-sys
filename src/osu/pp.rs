@@ -11,7 +11,7 @@ use crate::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{OsuPP, Beatmap};
+/// use rina_pp::{OsuPP, Beatmap};
 ///
 /// # /*
 /// let map: Beatmap = ...
