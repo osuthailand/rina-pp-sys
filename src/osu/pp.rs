@@ -410,27 +410,27 @@ impl OsuPpInner {
             multiplier *= 1.0 - (self.attrs.n_spinners as f64 / total_hits).powf(0.85);
         }
 
-        if self.mods.rx() {
-            // * https://www.desmos.com/calculator/bc9eybdthb
-            // * we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
-            // * this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
-            let (n100_mult, n50_mult) = if self.attrs.od > 0.0 {
-                (
-                    1.0 - (self.attrs.od / 13.33).powf(1.8),
-                    1.0 - (self.attrs.od / 13.33).powi(5),
-                )
-            } else {
-                (1.0, 1.0)
-            };
+        // if self.mods.rx() {
+        //     // * https://www.desmos.com/calculator/bc9eybdthb
+        //     // * we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
+        //     // * this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
+        //     let (n100_mult, n50_mult) = if self.attrs.od > 0.0 {
+        //         (
+        //             1.0 - (self.attrs.od / 13.33).powf(1.8),
+        //             1.0 - (self.attrs.od / 13.33).powi(5),
+        //         )
+        //     } else {
+        //         (1.0, 1.0)
+        //     };
 
-            // * As we're adding Oks and Mehs to an approximated number of combo breaks the result can be
-            // * higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
-            self.effective_miss_count = (self.effective_miss_count
-                + self.state.n100 as f64
-                + n100_mult
-                + self.state.n50 as f64 * n50_mult)
-                .min(total_hits);
-        }
+        //     // * As we're adding Oks and Mehs to an approximated number of combo breaks the result can be
+        //     // * higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
+        //     self.effective_miss_count = (self.effective_miss_count
+        //         + self.state.n100 as f64
+        //         + n100_mult
+        //         + self.state.n50 as f64 * n50_mult)
+        //         .min(total_hits);
+        // }
 
         let aim_value = self.compute_aim_value();
         let speed_value = self.compute_speed_value();
@@ -476,9 +476,7 @@ impl OsuPpInner {
 
         aim_value *= self.get_combo_scaling_factor();
 
-        let ar_factor = if self.mods.rx() {
-            0.0
-        } else if self.attrs.ar > 10.33 {
+        let ar_factor = if self.attrs.ar > 10.33 {
             0.3 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
             0.05 * (8.0 - self.attrs.ar)
@@ -518,9 +516,9 @@ impl OsuPpInner {
     }
 
     fn compute_speed_value(&self) -> f64 {
-        if self.mods.rx() {
-            return 0.0;
-        }
+        // if self.mods.rx() {
+        //     return 0.0;
+        // }
 
         let mut speed_value =
             (5.0 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
@@ -589,9 +587,9 @@ impl OsuPpInner {
     }
 
     fn compute_accuracy_value(&self) -> f64 {
-        if self.mods.rx() {
-            return 0.0;
-        }
+        // if self.mods.rx() {
+        //     return 0.0;
+        // }
 
         // * This percentage only considers HitCircles of any value - in this part
         // * of the calculation we focus on hitting the timing hit window.
