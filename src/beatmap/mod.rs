@@ -185,6 +185,14 @@ impl Beatmap {
             .map(|i| self.effect_points[i])
     }
 
+    /// Returns the length of the beatmap.
+    #[inline]
+    pub fn hit_length(&self) -> f64 {
+        // convert ms to s
+        (self.hit_objects.last().unwrap().end_time() - self.hit_objects.first().unwrap().start_time)
+            / 1000_f64
+    }
+
     /// Convert a [`Beatmap`] of some mode into a different mode.
     ///
     /// # Note

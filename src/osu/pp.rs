@@ -373,6 +373,7 @@ impl<'map> OsuPP<'map> {
             acc: state.accuracy(),
             state,
             effective_miss_count,
+            map: self.map.clone(),
         };
 
         inner.calculate()
@@ -385,6 +386,7 @@ struct OsuPpInner {
     acc: f64,
     state: OsuScoreState,
     effective_miss_count: f64,
+    map: Beatmap,
 }
 
 impl OsuPpInner {
@@ -436,9 +438,6 @@ impl OsuPpInner {
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-        // println!("aim_value: {}", aim_value);
-        // println!("speed_value: {}", speed_value);
-        // println!("acc_value: {}", acc_value);
         let pp = (aim_value.powf(1.1)
             + speed_value.powf(1.1)
             + acc_value.powf(1.1)
@@ -522,6 +521,19 @@ impl OsuPpInner {
         // * It is important to consider accuracy difficulty when scaling with accuracy.
         aim_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
 
+        if self.mods.rx() {
+            let avg_distance = self.get_average_circle_distance();
+            let length = self.map.hit_length();
+            // reward longer long jump maps
+            if avg_distance > 30000_f64 {
+                aim_value *= if length < 300_f64 {
+                    (avg_distance / 20000_f64).sqrt() * 0.25 * (length / 400_f64).sqrt() + 0.7
+                } else {
+                    (avg_distance / 19000_f64).sqrt() * 0.25 * (length / 200_f64).sqrt() + 0.75
+                }
+            }
+        }
+
         aim_value
     }
 
@@ -598,6 +610,15 @@ impl OsuPpInner {
         //     (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
         //         * (self.state.n50 as f64 - total_hits / 500.0),
         // );
+
+        if self.mods.rx() {
+            let avg_distance = self.get_average_circle_distance();
+
+            // punish stream maps
+            if avg_distance < 10000_f64 {
+                speed_value *= (avg_distance / 1000_f64).sqrt() * 0.1
+            }
+        }
 
         speed_value
     }
@@ -720,6 +741,24 @@ impl OsuPpInner {
 
     fn total_hits(&self) -> f64 {
         self.state.total_hits() as f64
+    }
+
+    fn get_average_circle_distance(&self) -> f64 {
+        let mut pos = 0;
+        let mut object_distances_to_next: Vec<f64> = vec![];
+        while pos + 1 < self.map.hit_objects.len() {
+            let obj = &self.map.hit_objects[pos];
+            let next_obj = &self.map.hit_objects[pos + 1];
+
+            let dist =
+                (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2).sqrt();
+            object_distances_to_next.push(dist as f64);
+            pos += 1;
+        }
+
+        let sum: f64 = object_distances_to_next.iter().sum();
+        let count = object_distances_to_next.len() as f64;
+        sum / count
     }
 }
 
