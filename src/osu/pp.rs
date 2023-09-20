@@ -517,22 +517,23 @@ impl OsuPpInner {
             aim_value *= slider_nerf_factor;
         }
 
+        if self.mods.rx() {
+            // if avg_distance > 30000_f64 {
+            //     aim_value *= if length < 300_f64 {
+            //         (avg_distance / 20000_f64).sqrt() * 0.25 * (length / 400_f64).sqrt() + 0.7
+            //     } else {
+            //         (avg_distance / 19000_f64).sqrt() * 0.25 * (length / 200_f64).sqrt() + 0.75
+            //     }
+            // }
+            let diff_ratio = self.get_distance_duration_ratio();
+            aim_value *=
+                2.1_f64.powf(diff_ratio) * 0.25 * (self.map.hit_length() / self.total_hits()).sqrt()
+                    + 0.2
+        }
+
         aim_value *= self.acc;
         // * It is important to consider accuracy difficulty when scaling with accuracy.
         aim_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
-
-        if self.mods.rx() {
-            let avg_distance = self.get_average_circle_distance();
-            let length = self.map.hit_length();
-            // reward longer long jump maps
-            if avg_distance > 30000_f64 {
-                aim_value *= if length < 300_f64 {
-                    (avg_distance / 20000_f64).sqrt() * 0.25 * (length / 400_f64).sqrt() + 0.7
-                } else {
-                    (avg_distance / 19000_f64).sqrt() * 0.25 * (length / 200_f64).sqrt() + 0.75
-                }
-            }
-        }
 
         aim_value
     }
@@ -596,13 +597,8 @@ impl OsuPpInner {
         };
 
         // * Scale the speed value with accuracy and OD.
-        if self.mods.rx() {
-            speed_value *=
-                1_f64 + (0.95 / 750.0) * ((self.acc + relevant_acc) / 2.0).powf((6.5) / 2.0);
-        } else {
-            speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
-                * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
-        }
+        speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
 
         // * Scale the speed value with # of 50s to punish doubletapping.
         // akatsuki osu_2019 used 0.98
@@ -611,14 +607,14 @@ impl OsuPpInner {
         //         * (self.state.n50 as f64 - total_hits / 500.0),
         // );
 
-        if self.mods.rx() {
-            let avg_distance = self.get_average_circle_distance();
+        // if self.mods.rx() {
+        //     let avg_distance = self.get_average_circle_distance();
 
-            // punish stream maps
-            if avg_distance < 10000_f64 {
-                speed_value *= (avg_distance / 1000_f64).sqrt() * 0.1
-            }
-        }
+        //     // punish stream maps
+        //     if avg_distance < 10000_f64 {
+        //         speed_value *= (avg_distance / 1000_f64).sqrt() * 0.1
+        //     }
+        // }
 
         speed_value
     }
@@ -656,16 +652,7 @@ impl OsuPpInner {
         //    * (((n300 - (total_hits - n_circles)) * 6.0 + n100 * 2.0 + n50) / (n_circles * 6.0))
         //        .max(0.0);
 
-        let mut acc_value = if self.mods.rx() {
-            if better_acc_percentage >= 0.98 {
-                1.52163_f64.powf(self.attrs.ar) * better_acc_percentage.powi(12)
-            } else {
-                1.1_f64.powf(self.attrs.ar) * better_acc_percentage.powi(10)
-            }
-        } else {
-            1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83
-        };
-
+        let mut acc_value = 1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83;
         // * Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
 
         if amount_hit_objects_with_acc > 1000 {
@@ -743,21 +730,53 @@ impl OsuPpInner {
         self.state.total_hits() as f64
     }
 
-    fn get_average_circle_distance(&self) -> f64 {
+    // fn get_average_circle_distance(&self) -> f64 {
+    //     let mut pos = 0;
+    //     let mut object_distances_to_next: Vec<f64> = vec![];
+    //     while pos + 1 < self.map.hit_objects.len() {
+    //         let obj = &self.map.hit_objects[pos];
+    //         let next_obj = &self.map.hit_objects[pos + 1];
+
+    //         if !next_obj.is_circle() || !obj.is_circle() {
+    //             pos += 1;
+    //             continue;
+    //         }
+
+    //         let dist =
+    //             (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2).sqrt();
+    //         object_distances_to_next.push(dist as f64);
+    //         pos += 1;
+    //     }
+
+    //     let sum: f64 = object_distances_to_next.iter().sum();
+    //     let count = object_distances_to_next.len() as f64;
+    //     sum / count
+    // }
+
+    fn get_distance_duration_ratio(&self) -> f64 {
         let mut pos = 0;
-        let mut object_distances_to_next: Vec<f64> = vec![];
+        let mut ratios: Vec<f64> = vec![];
         while pos + 1 < self.map.hit_objects.len() {
             let obj = &self.map.hit_objects[pos];
             let next_obj = &self.map.hit_objects[pos + 1];
 
-            let dist =
-                (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2).sqrt();
-            object_distances_to_next.push(dist as f64);
+            if !obj.is_circle() || !next_obj.is_circle() {
+                pos += 1;
+                continue;
+            }
+
+            let _dist = (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2);
+            let dist = _dist.sqrt();
+
+            let duration = next_obj.start_time - obj.end_time();
+            let ratio = dist as f64 / duration;
+            ratios.push(ratio);
+
             pos += 1;
         }
 
-        let sum: f64 = object_distances_to_next.iter().sum();
-        let count = object_distances_to_next.len() as f64;
+        let sum: f64 = ratios.iter().sum();
+        let count = ratios.len() as f64;
         sum / count
     }
 }

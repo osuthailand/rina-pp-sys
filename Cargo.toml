@@ -1,6 +1,6 @@
 [package]
 name = "rina-pp"
-version = "0.9.7"
+version = "0.9.8"
 authors = ["MaxOhn <ohn.m@hotmail.de>", "Aoba Suzukaze <aoba@rina.place>"]
 edition = "2021"
 license = "MIT"
