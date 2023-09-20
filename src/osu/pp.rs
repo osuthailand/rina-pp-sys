@@ -527,8 +527,7 @@ impl OsuPpInner {
             // }
             let diff_ratio = self.get_distance_duration_ratio();
             aim_value *=
-                2.1_f64.powf(diff_ratio) * 0.25 * (self.map.hit_length() / self.total_hits()).sqrt()
-                    + 0.2
+                2.1_f64.powf(diff_ratio + (self.map.hit_length() / self.total_hits() / 2.0)) * 0.2
         }
 
         aim_value *= self.acc;
@@ -607,14 +606,14 @@ impl OsuPpInner {
         //         * (self.state.n50 as f64 - total_hits / 500.0),
         // );
 
-        // if self.mods.rx() {
-        //     let avg_distance = self.get_average_circle_distance();
+        if self.mods.rx() {
+            let avg_distance = self.get_average_circle_distance();
 
-        //     // punish stream maps
-        //     if avg_distance < 10000_f64 {
-        //         speed_value *= (avg_distance / 1000_f64).sqrt() * 0.1
-        //     }
-        // }
+            // punish stream maps
+            if avg_distance < 10000_f64 {
+                speed_value *= (avg_distance / 1000_f64).sqrt() * 0.1
+            }
+        }
 
         speed_value
     }
@@ -730,28 +729,28 @@ impl OsuPpInner {
         self.state.total_hits() as f64
     }
 
-    // fn get_average_circle_distance(&self) -> f64 {
-    //     let mut pos = 0;
-    //     let mut object_distances_to_next: Vec<f64> = vec![];
-    //     while pos + 1 < self.map.hit_objects.len() {
-    //         let obj = &self.map.hit_objects[pos];
-    //         let next_obj = &self.map.hit_objects[pos + 1];
+    fn get_average_circle_distance(&self) -> f64 {
+        let mut pos = 0;
+        let mut object_distances_to_next: Vec<f64> = vec![];
+        while pos + 1 < self.map.hit_objects.len() {
+            let obj = &self.map.hit_objects[pos];
+            let next_obj = &self.map.hit_objects[pos + 1];
 
-    //         if !next_obj.is_circle() || !obj.is_circle() {
-    //             pos += 1;
-    //             continue;
-    //         }
+            if !next_obj.is_circle() || !obj.is_circle() {
+                pos += 1;
+                continue;
+            }
 
-    //         let dist =
-    //             (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2).sqrt();
-    //         object_distances_to_next.push(dist as f64);
-    //         pos += 1;
-    //     }
+            let dist =
+                (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2).sqrt();
+            object_distances_to_next.push(dist as f64);
+            pos += 1;
+        }
 
-    //     let sum: f64 = object_distances_to_next.iter().sum();
-    //     let count = object_distances_to_next.len() as f64;
-    //     sum / count
-    // }
+        let sum: f64 = object_distances_to_next.iter().sum();
+        let count = object_distances_to_next.len() as f64;
+        sum / count
+    }
 
     fn get_distance_duration_ratio(&self) -> f64 {
         let mut pos = 0;
