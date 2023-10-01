@@ -1,6 +1,6 @@
 [package]
 name = "rina-pp"
-version = "0.9.14"
+version = "0.9.15"
 authors = ["MaxOhn <ohn.m@hotmail.de>", "Aoba Suzukaze <aoba@rina.place>"]
 edition = "2021"
 license = "MIT"
@@ -17,7 +17,8 @@ async_tokio = ["tokio"]
 
 [dependencies]
 async-std = { version = "1.9", optional = true }
-tokio = { version = "1.2", optional = true, default-features = false, features = ["fs", "io-util"] }
+tokio = { version = "1.2", optional = true, default-features = false, features = ["full"] }
+sqlx = { version = "0.7", features = [ "mysql", "runtime-tokio" ] }
 
 [dev-dependencies]
 tokio = { version = "1.2", default-features = false, features = ["fs", "rt"] }
