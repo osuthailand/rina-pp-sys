@@ -723,9 +723,9 @@ impl OsuPpInner {
     }
 
     fn get_combo_scaling_factor(&self) -> f64 {
-        if self.mods.rx() {
-            return 1.0;
-        }
+        // if self.mods.rx() {
+        //     return 1.0;
+        // }
 
         if self.attrs.max_combo == 0 {
             1.0
