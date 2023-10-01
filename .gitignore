@@ -12,3 +12,4 @@ output*
 /pp-plot/accuracy_*
 /examples
 /maps
+.vscode

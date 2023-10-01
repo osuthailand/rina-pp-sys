@@ -438,12 +438,10 @@ impl OsuPpInner {
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-        let pp = (aim_value.powf(1.1)
-            + speed_value.powf(1.1)
-            + acc_value.powf(1.1)
-            + flashlight_value.powf(1.1))
-        .powf(1.0 / 1.1)
-            * multiplier;
+        let pp =
+            (aim_value.powf(1.12) + speed_value + acc_value.powf(1.1) + flashlight_value.powf(1.1))
+                .powf(1.0 / 1.1)
+                * multiplier;
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -518,16 +516,14 @@ impl OsuPpInner {
         }
 
         if self.mods.rx() {
-            // if avg_distance > 30000_f64 {
-            //     aim_value *= if length < 300_f64 {
-            //         (avg_distance / 20000_f64).sqrt() * 0.25 * (length / 400_f64).sqrt() + 0.7
-            //     } else {
-            //         (avg_distance / 19000_f64).sqrt() * 0.25 * (length / 200_f64).sqrt() + 0.75
-            //     }
-            // }
             let diff_ratio = self.get_distance_duration_ratio();
-            aim_value *=
-                2.1_f64.powf(diff_ratio + (self.map.hit_length() / self.total_hits() / 2.0)) * 0.2
+            let length = self.map.hit_length();
+            aim_value *= 2.1_f64.powf(diff_ratio + ((length) / self.total_hits() / 2.0)) * 0.2;
+
+            if (length) <= 60.0_f64 {
+                // maybe say length / total hits instead of 130.
+                aim_value *= 1.21 * (length / 120.0).sqrt() + 0.1
+            }
         }
 
         aim_value *= self.acc;
@@ -545,11 +541,15 @@ impl OsuPpInner {
         let mut speed_value =
             (5.0 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
+        // only add length bonus on aim when relax
         let total_hits = self.total_hits();
 
-        let len_bonus = 0.95
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5;
+        let len_bonus = if self.mods.rx() {
+            1_f64
+        } else {
+            0.95 + 0.4 * (total_hits / 2000.0).min(1.0)
+                + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5
+        };
 
         speed_value *= len_bonus;
 
@@ -609,9 +609,9 @@ impl OsuPpInner {
         if self.mods.rx() {
             let avg_distance = self.get_average_circle_distance();
 
-            // punish stream maps
+            // punish stream maps (more)
             if avg_distance < 10000_f64 {
-                speed_value *= (avg_distance / 1000_f64).sqrt() * 0.1
+                speed_value *= (avg_distance / 1000_f64).sqrt() * 0.06
             }
         }
 
@@ -627,7 +627,7 @@ impl OsuPpInner {
         // * of the calculation we focus on hitting the timing hit window.
         let amount_hit_objects_with_acc = self.attrs.n_circles;
 
-        let better_acc_percentage = if amount_hit_objects_with_acc > 0 {
+        let _better_acc_percentage = if amount_hit_objects_with_acc > 0 {
             let sub = self.state.total_hits() - amount_hit_objects_with_acc;
 
             // * It is possible to reach a negative accuracy with this formula. Cap it at zero - zero points.
@@ -651,7 +651,8 @@ impl OsuPpInner {
         //    * (((n300 - (total_hits - n_circles)) * 6.0 + n100 * 2.0 + n50) / (n_circles * 6.0))
         //        .max(0.0);
 
-        let mut acc_value = 1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83;
+        let mut acc_value =
+            1.492_f64.powf(self.attrs.od) * _better_acc_percentage.powi(28).sqrt() * 2.5;
         // * Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
 
         if amount_hit_objects_with_acc > 1000 {
