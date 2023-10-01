@@ -518,6 +518,7 @@ impl OsuPpInner {
         if self.mods.rx() {
             let diff_ratio = self.get_distance_duration_ratio();
             let length = self.map.hit_length();
+
             aim_value *= 2.1_f64.powf(diff_ratio + ((length) / self.total_hits() / 2.0)) * 0.2;
 
             if (length) <= 60.0_f64 {
@@ -769,7 +770,13 @@ impl OsuPpInner {
             let dist = _dist.sqrt();
 
             let duration = next_obj.start_time - obj.end_time();
-            let ratio = dist as f64 / duration;
+
+            let mut ratio = 0.0;
+
+            if duration != 0.0 {
+                ratio = dist as f64 / duration;
+            }
+
             ratios.push(ratio);
 
             pos += 1;
