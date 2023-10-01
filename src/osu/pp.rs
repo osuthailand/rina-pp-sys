@@ -523,7 +523,11 @@ impl OsuPpInner {
                 length /= 1.5;
             }
 
-            aim_value *= 2.1_f64.powf(diff_ratio + (length / self.total_hits() / 2.0)) * 0.2;
+            if self.mods.dt() {
+                aim_value *= 1.96_f64.powf(diff_ratio + (length / self.total_hits() / 2.0)) * 0.2;
+            } else {
+                aim_value *= 2.1_f64.powf(diff_ratio + (length / self.total_hits() / 2.0)) * 0.2;
+            };
 
             if length <= 60.0_f64 {
                 // maybe say length / total hits instead of 130.
