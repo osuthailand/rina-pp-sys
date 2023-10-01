@@ -517,11 +517,15 @@ impl OsuPpInner {
 
         if self.mods.rx() {
             let diff_ratio = self.get_distance_duration_ratio();
-            let length = self.map.hit_length();
+            let mut length = self.map.hit_length();
 
-            aim_value *= 2.1_f64.powf(diff_ratio + ((length) / self.total_hits() / 2.0)) * 0.2;
+            if self.mods.dt() {
+                length /= 1.5;
+            }
 
-            if (length) <= 60.0_f64 {
+            aim_value *= 2.1_f64.powf(diff_ratio + (length / self.total_hits() / 2.0)) * 0.2;
+
+            if length <= 60.0_f64 {
                 // maybe say length / total hits instead of 130.
                 aim_value *= 1.21 * (length / 120.0).sqrt() + 0.1
             }
@@ -769,7 +773,10 @@ impl OsuPpInner {
             let _dist = (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2);
             let dist = _dist.sqrt();
 
-            let duration = next_obj.start_time - obj.end_time();
+            let mut duration = next_obj.start_time - obj.end_time();
+            if self.mods.dt() {
+                duration /= 1.19; // should be 1.5, but it buffs maps too much
+            }
 
             let mut ratio = 0.0;
 
