@@ -468,9 +468,15 @@ impl OsuPpInner {
         // * Penalize misses by assessing # of misses relative to the total # of objects.
         // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            aim_value *= 0.97
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                    .powf(self.effective_miss_count);
+            if self.mods.rx() {
+                aim_value *= 0.97
+                    * (0.9 - (self.effective_miss_count / total_hits).powf(0.775))
+                        .powf(self.effective_miss_count.powf(0.875));
+            } else {
+                aim_value *= 0.97
+                    * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
+                        .powf(self.effective_miss_count);
+            }
         }
 
         aim_value *= self.get_combo_scaling_factor();
@@ -487,48 +493,6 @@ impl OsuPpInner {
             0.0
         };
 
-        if self.mods.rx() {
-            let diff_ratio = self.get_distance_duration_ratio();
-            let mut length = self.map.hit_length();
-
-            if self.mods.dt() {
-                length /= 1.5;
-            }
-
-            if self.mods.dt() {
-                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.39;
-            } else {
-                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 7.0) * 0.38;
-            };
-
-            println!(
-                "{} / {} = {} (ratio: {})",
-                length,
-                self.total_hits(),
-                length / self.total_hits(),
-                diff_ratio
-            );
-
-            if self.mods.dt() {
-                println!(
-                    "aim buff/nerf with ratio {}:  {}",
-                    diff_ratio,
-                    2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.39
-                );
-            } else {
-                println!(
-                    "aim buff/nerf with ratio {}:  {}",
-                    diff_ratio,
-                    2.31_f64.powf(1.0 + diff_ratio / 7.0) * 0.38
-                );
-            };
-
-            if length <= 65.0_f64 {
-                println!("length nerf: {}", (length / 489.0).sqrt() * 1.4 + 0.53);
-
-                aim_value *= (length / 489.0).sqrt() * 1.4 + 0.49
-            }
-        }
         if self.mods.rx() {
             aim_value *= 1.0 + ar_factor;
         } else {
@@ -561,6 +525,32 @@ impl OsuPpInner {
         // * It is important to consider accuracy difficulty when scaling with accuracy.
         aim_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
 
+        if self.mods.rx() {
+            let diff_ratio = self.get_distance_duration_ratio();
+            let mut length = self.map.hit_length();
+
+            // dt cuts length
+            if self.mods.dt() {
+                length /= 1.5;
+            }
+
+            if self.mods.dt() {
+                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.39;
+            } else {
+                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 7.0) * 0.38;
+            };
+
+            // nerf short maps
+            if length <= 65.0_f64 {
+                aim_value *= (length / 489.0).sqrt() * 1.4 + 0.49
+            }
+
+            // give length bonus to maps over 2 minutes long.
+            if length >= 120.0 {
+                aim_value *= 0.95 + 0.4 * length.log10() * 0.2
+            }
+        }
+
         aim_value
     }
 
@@ -587,9 +577,15 @@ impl OsuPpInner {
         // * Penalize misses by assessing # of misses relative to the total # of objects.
         // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            speed_value *= 0.97
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                    .powf(self.effective_miss_count.powf(0.875));
+            if self.mods.rx() {
+                speed_value *= 0.97
+                    * (0.9 - (self.effective_miss_count / total_hits).powf(0.775))
+                        .powf(self.effective_miss_count.powf(0.875));
+            } else {
+                speed_value *= 0.97
+                    * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
+                        .powf(self.effective_miss_count.powf(0.875));
+            }
         }
 
         speed_value *= self.get_combo_scaling_factor();
@@ -619,7 +615,7 @@ impl OsuPpInner {
             - (relevant_total_diff - (self.state.n300 + self.state.n100) as f64).max(0.0))
         .max(0.0);
 
-        let _relevant_acc = if self.attrs.speed_note_count.abs() <= f64::EPSILON {
+        let relevant_acc = if self.attrs.speed_note_count.abs() <= f64::EPSILON {
             0.0
         } else {
             (relevant_n300 * 6.0 + relevant_n100 * 2.0 + relevant_n50)
@@ -627,12 +623,12 @@ impl OsuPpInner {
         };
 
         // * Scale the speed value with accuracy and OD.
-        // speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
-        //     * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
+        speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
 
         // * Scale the speed value with # of 50s to punish doubletapping.
         // akatsuki osu_2019 used 0.98
-        speed_value *= 0.98_f64.powf(
+        speed_value *= 0.99_f64.powf(
             (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
                 * (self.state.n50 as f64 - total_hits / 500.0),
         );
@@ -658,34 +654,24 @@ impl OsuPpInner {
         // * of the calculation we focus on hitting the timing hit window.
         let amount_hit_objects_with_acc = self.attrs.n_circles;
 
-        // let _better_acc_percentage = if amount_hit_objects_with_acc > 0 {
-        //     let sub = self.state.total_hits() - amount_hit_objects_with_acc;
+        let better_acc_percentage = if amount_hit_objects_with_acc > 0 {
+            let sub = self.state.total_hits() - amount_hit_objects_with_acc;
 
-        //     // * It is possible to reach a negative accuracy with this formula. Cap it at zero - zero points.
-        //     if self.state.n300 < sub {
-        //         0.0
-        //     } else {
-        //         ((self.state.n300 - sub) * 6 + self.state.n100 * 2 + self.state.n50) as f64
-        //             / (amount_hit_objects_with_acc * 6) as f64
-        //     }
-        // } else {
-        //     0.0
-        // };
+            // * It is possible to reach a negative accuracy with this formula. Cap it at zero - zero points.
+            if self.state.n300 < sub {
+                0.0
+            } else {
+                ((self.state.n300 - sub) * 6 + self.state.n100 * 2 + self.state.n50) as f64
+                    / (amount_hit_objects_with_acc * 6) as f64
+            }
+        } else {
+            0.0
+        };
 
         // * Lots of arbitrary values from testing.
         // * Considering to use derivation from perfect accuracy in a probabilistic manner - assume normal distribution.
         //let mut acc_value = 1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83;
         // let mut acc_value = 1.52163_f64.powf(self.attrs.ar) * better_acc_percentage.powi(24);
-
-        //akatsuki osu_2019
-        let better_acc_percentage = (amount_hit_objects_with_acc as f32 > 0.0) as u8 as f32
-            * (((self.state.n300 - (self.state.total_hits() - amount_hit_objects_with_acc))
-                as f32
-                * 6.0
-                + self.state.n100 as f32 * 2.0
-                + self.state.n50 as f32)
-                / (amount_hit_objects_with_acc as f32 * 6.0))
-                .max(0.0);
 
         let mut acc_value =
             1.492_f64.powf(self.attrs.od) * (better_acc_percentage as f64).powi(28).sqrt() * 2.5;
@@ -806,7 +792,7 @@ impl OsuPpInner {
 
             let mut duration = next_obj.start_time - obj.end_time();
             if self.mods.dt() {
-                duration /= 1.5; // should be 1.5, but it buffs maps too much
+                duration /= 1.44; // should be 1.5, but it buffs maps too much
             }
 
             let mut ratio = 0.0;
