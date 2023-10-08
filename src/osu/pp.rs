@@ -674,7 +674,7 @@ impl OsuPpInner {
         // let mut acc_value = 1.52163_f64.powf(self.attrs.ar) * better_acc_percentage.powi(24);
 
         let mut acc_value =
-            1.492_f64.powf(self.attrs.od) * (better_acc_percentage as f64).powi(28).sqrt() * 2.5;
+            1.492_f64.powf(self.attrs.od) * (better_acc_percentage).powi(28).sqrt() * 2.5;
         // * Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
 
         if amount_hit_objects_with_acc > 1000 {
