@@ -438,11 +438,12 @@ impl OsuPpInner {
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-        let pp =
-            (aim_value.powf(1.12) + speed_value + acc_value.powf(1.1) + flashlight_value.powf(1.1))
-                .powf(1.0 / 1.1)
-                * multiplier;
-
+        let pp = (aim_value.powf(1.1)
+            + speed_value.powf(1.1)
+            + acc_value.powf(1.1)
+            + flashlight_value.powf(1.1))
+        .powf(1.0 / 1.1)
+            * multiplier;
         OsuPerformanceAttributes {
             difficulty: self.attrs,
             pp_acc: acc_value,
@@ -456,6 +457,11 @@ impl OsuPpInner {
 
     fn compute_aim_value(&self) -> f64 {
         let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
+
+        // stream aim nerf
+        if (self.attrs.aim / self.attrs.speed) < 1.0 && self.mods.rx() {
+            aim_value *= self.attrs.aim / self.attrs.speed - 0.12
+        }
 
         let total_hits = self.total_hits();
 
@@ -535,9 +541,9 @@ impl OsuPpInner {
             }
 
             if self.mods.dt() {
-                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.39;
+                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.43;
             } else {
-                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 7.0) * 0.38;
+                aim_value *= 2.31_f64.powf(1.275 + diff_ratio / 4.0) * 0.38;
             };
 
             // nerf short maps
@@ -555,10 +561,6 @@ impl OsuPpInner {
     }
 
     fn compute_speed_value(&self) -> f64 {
-        // if self.mods.rx() {
-        //     return 0.0;
-        // }
-
         let mut speed_value =
             (5.0 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
@@ -627,7 +629,6 @@ impl OsuPpInner {
             * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
 
         // * Scale the speed value with # of 50s to punish doubletapping.
-        // akatsuki osu_2019 used 0.98
         speed_value *= 0.99_f64.powf(
             (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
                 * (self.state.n50 as f64 - total_hits / 500.0),
@@ -646,10 +647,6 @@ impl OsuPpInner {
     }
 
     fn compute_accuracy_value(&self) -> f64 {
-        // if self.mods.rx() {
-        //     return 0.0;
-        // }
-
         // * This percentage only considers HitCircles of any value - in this part
         // * of the calculation we focus on hitting the timing hit window.
         let amount_hit_objects_with_acc = self.attrs.n_circles;
@@ -670,9 +667,6 @@ impl OsuPpInner {
 
         // * Lots of arbitrary values from testing.
         // * Considering to use derivation from perfect accuracy in a probabilistic manner - assume normal distribution.
-        //let mut acc_value = 1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83;
-        // let mut acc_value = 1.52163_f64.powf(self.attrs.ar) * better_acc_percentage.powi(24);
-
         let mut acc_value =
             1.492_f64.powf(self.attrs.od) * (better_acc_percentage).powi(28).sqrt() * 2.5;
         // * Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
@@ -778,6 +772,14 @@ impl OsuPpInner {
     fn get_distance_duration_ratio(&self) -> f64 {
         let mut pos = 0;
         let mut ratios: Vec<f64> = vec![];
+
+        let mut map_cs = self.map.cs.clone();
+
+        if self.mods.hr() {
+            map_cs += map_cs * 0.3;
+        } else if self.mods.ez() {
+            map_cs *= 2.0;
+        }
         while pos + 1 < self.map.hit_objects.len() {
             let obj = &self.map.hit_objects[pos];
             let next_obj = &self.map.hit_objects[pos + 1];
@@ -788,7 +790,11 @@ impl OsuPpInner {
             }
 
             let _dist = (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2);
-            let dist = _dist.sqrt();
+            let mut dist = _dist.sqrt();
+
+            // calculate the circle radius of the 2 circles and subtract it from distance.
+            let r = 54.4 - 4.48 * map_cs;
+            dist -= r * 2.0;
 
             let mut duration = next_obj.start_time - obj.end_time();
             if self.mods.dt() {
