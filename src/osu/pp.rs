@@ -460,7 +460,7 @@ impl OsuPpInner {
 
         // stream aim nerf
         if (self.attrs.aim / self.attrs.speed) < 1.0 && self.mods.rx() {
-            aim_value *= self.attrs.aim / self.attrs.speed - 0.12
+            aim_value *= self.attrs.aim / self.attrs.speed - 0.5
         }
 
         let total_hits = self.total_hits();
@@ -541,9 +541,9 @@ impl OsuPpInner {
             }
 
             if self.mods.dt() {
-                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.43;
+                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.4;
             } else {
-                aim_value *= 2.31_f64.powf(1.275 + diff_ratio / 4.0) * 0.38;
+                aim_value *= 2.31_f64.powf(1.1 + diff_ratio / 4.0) * 0.4;
             };
 
             // nerf short maps
