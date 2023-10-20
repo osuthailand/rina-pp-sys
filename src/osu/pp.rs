@@ -459,8 +459,8 @@ impl OsuPpInner {
         let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
         // stream aim nerf
-        if (self.attrs.aim / self.attrs.speed) < 1.03 && self.mods.rx() && self.mods.dt() {
-            aim_value *= self.attrs.aim / self.attrs.speed - 0.7
+        if (self.attrs.aim / self.attrs.speed) < 1.03 && self.mods.rx() {
+            aim_value *= (self.attrs.aim / self.attrs.speed - 0.7).max(0.2).min(0.9)
         }
 
         let total_hits = self.total_hits();
