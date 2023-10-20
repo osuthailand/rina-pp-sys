@@ -459,8 +459,8 @@ impl OsuPpInner {
         let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
         // stream aim nerf
-        if (self.attrs.aim / self.attrs.speed) < 1.0 && self.mods.rx() {
-            aim_value *= self.attrs.aim / self.attrs.speed - 0.5
+        if (self.attrs.aim / self.attrs.speed) < 1.03 && self.mods.rx() && self.mods.dt() {
+            aim_value *= self.attrs.aim / self.attrs.speed - 0.7
         }
 
         let total_hits = self.total_hits();
@@ -549,11 +549,6 @@ impl OsuPpInner {
             // nerf short maps
             if length <= 65.0_f64 {
                 aim_value *= (length / 489.0).sqrt() * 1.4 + 0.49
-            }
-
-            // give length bonus to maps over 2 minutes long.
-            if length >= 120.0 {
-                aim_value *= 0.95 + 0.4 * length.log10() * 0.2
             }
         }
 
