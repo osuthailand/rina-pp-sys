@@ -460,7 +460,7 @@ impl OsuPpInner {
 
         // stream aim nerf
         if (self.attrs.aim / self.attrs.speed) < 1.03 && self.mods.rx() {
-            aim_value *= (self.attrs.aim / self.attrs.speed - 0.7).max(0.2).min(0.9)
+            aim_value *= (self.attrs.aim / self.attrs.speed - 0.5).max(0.2).min(0.9)
         }
 
         let total_hits = self.total_hits();
@@ -476,7 +476,7 @@ impl OsuPpInner {
         if self.effective_miss_count > 0.0 {
             if self.mods.rx() {
                 aim_value *= 0.97
-                    * (0.9 - (self.effective_miss_count / total_hits).powf(0.775))
+                    * (0.94 - (self.effective_miss_count / total_hits).powf(0.775))
                         .powf(self.effective_miss_count.powf(0.875));
             } else {
                 aim_value *= 0.97
@@ -574,15 +574,9 @@ impl OsuPpInner {
         // * Penalize misses by assessing # of misses relative to the total # of objects.
         // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            if self.mods.rx() {
-                speed_value *= 0.97
-                    * (0.9 - (self.effective_miss_count / total_hits).powf(0.775))
-                        .powf(self.effective_miss_count.powf(0.875));
-            } else {
-                speed_value *= 0.97
-                    * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                        .powf(self.effective_miss_count.powf(0.875));
-            }
+            speed_value *= 0.97
+                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
+                    .powf(self.effective_miss_count.powf(0.875));
         }
 
         speed_value *= self.get_combo_scaling_factor();
