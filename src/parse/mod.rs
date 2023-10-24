@@ -102,6 +102,51 @@ macro_rules! next_line {
     }};
 }
 
+macro_rules! parse_metadata_body {
+    ($self:ident, $reader:ident, $section:ident) => {{
+        let mut empty = true;
+
+        while next_line!($reader)? != 0 {
+            if let Some(bytes) = $reader.get_section() {
+                *$section = Section::from_bytes(bytes);
+                empty = false;
+                break;
+            }
+
+            let (key, value) = match $reader.split_colon() {
+                Some(tuple) => tuple,
+                None => continue,
+            };
+
+            if key == b"Title" {
+                $self.title = value.to_string()
+            }
+
+            if key == b"Artist" {
+                $self.artist = value.to_string()
+            }
+
+            if key == b"Creator" {
+                $self.creator = value.to_string()
+            }
+
+            if key == b"Version" {
+                $self.difficulty = value.to_string()
+            }
+
+            if key == b"BeatmapID" {
+                $self.map_id = value.parse::<i32>().unwrap()
+            }
+
+            if key == b"BeatmapSetID" {
+                $self.set_id = value.parse::<i32>().unwrap()
+            }
+        }
+
+        Ok(empty)
+    }};
+}
+
 macro_rules! parse_general_body {
     ($self:ident, $reader:ident, $section:ident) => {{
         let mut mode = None;
@@ -716,6 +761,7 @@ macro_rules! parse_body {
 
         loop {
             match section {
+                Section::Metadata => section!(map, parse_metadata, reader, section),
                 Section::General => section!(map, parse_general, reader, section),
                 Section::Difficulty => section!(map, parse_difficulty, reader, section),
                 Section::Events => section!(map, parse_events, reader, section),
@@ -925,6 +971,14 @@ impl Beatmap {
         parse_body!(input)
     }
 
+    fn parse_metadata<R: Read>(
+        &mut self,
+        reader: &mut FileReader<R>,
+        section: &mut Section,
+    ) -> ParseResult<bool> {
+        parse_metadata_body!(self, reader, section)
+    }
+
     fn parse_general<R: Read>(
         &mut self,
         reader: &mut FileReader<R>,
@@ -992,6 +1046,14 @@ impl Beatmap {
         parse_body!(input)
     }
 
+    async fn parse_metadata<R: AsyncRead + Unpin>(
+        &mut self,
+        reader: &mut FileReader<R>,
+        section: &mut Section,
+    ) -> ParseResult<bool> {
+        parse_metadata_body!(self, reader, section)
+    }
+
     async fn parse_general<R: AsyncRead + Unpin>(
         &mut self,
         reader: &mut FileReader<R>,
@@ -1048,6 +1110,7 @@ impl Beatmap {
 #[derive(Copy, Clone, Debug)]
 enum Section {
     None,
+    Metadata,
     General,
     Difficulty,
     TimingPoints,
@@ -1058,6 +1121,7 @@ enum Section {
 impl Section {
     fn from_bytes(bytes: &[u8]) -> Self {
         match bytes {
+            b"Metadata" => Self::Metadata,
             b"General" => Self::General,
             b"Difficulty" => Self::Difficulty,
             b"TimingPoints" => Self::TimingPoints,

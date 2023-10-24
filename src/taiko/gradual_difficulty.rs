@@ -42,6 +42,7 @@ use super::{
 /// ```
 #[derive(Clone, Debug)]
 pub struct TaikoGradualDifficultyAttributes {
+    mods: u32,
     attrs: TaikoDifficultyAttributes,
     hit_objects: IntoIter<Rc<RefCell<TaikoDifficultyObject>>>,
     lists: ObjectLists,
@@ -56,7 +57,7 @@ impl TaikoGradualDifficultyAttributes {
     pub fn new(map: &Beatmap, mods: u32) -> Self {
         let map = map.convert_mode(GameMode::Taiko);
         let is_convert = matches!(map, Cow::Owned(_));
-        let peaks = Peaks::new();
+        let peaks = Peaks::new().mods(mods);
         let clock_rate = mods.clock_rate();
 
         let BeatmapHitWindows { od: hit_window, .. } = map
@@ -77,6 +78,7 @@ impl TaikoGradualDifficultyAttributes {
 
         if map.hit_objects.len() < 2 {
             return Self {
+                mods,
                 hit_objects: Vec::new().into_iter(),
                 lists: ObjectLists::default(),
                 peaks,
@@ -131,6 +133,7 @@ impl TaikoGradualDifficultyAttributes {
         ColourDifficultyPreprocessor::process_and_assign(&mut diff_objects);
 
         Self {
+            mods,
             hit_objects: diff_objects.all.clone().into_iter(),
             lists: diff_objects,
             peaks,
@@ -167,7 +170,9 @@ impl Iterator for TaikoGradualDifficultyAttributes {
             mut combined_rating,
         } = self.peaks.clone().difficulty_values();
 
-        colour_rating *= DIFFICULTY_MULTIPLIER;
+        if !self.mods.rx() {
+            colour_rating *= DIFFICULTY_MULTIPLIER;
+        }
         rhythm_rating *= DIFFICULTY_MULTIPLIER;
         stamina_rating *= DIFFICULTY_MULTIPLIER;
         combined_rating *= DIFFICULTY_MULTIPLIER;
@@ -181,13 +186,17 @@ impl Iterator for TaikoGradualDifficultyAttributes {
 
             // * For maps with low colour variance and high stamina requirement,
             // * multiple inputs are more likely to be abused.
-            if colour_rating < 2.0 && stamina_rating > 8.0 {
+            if colour_rating < 2.0 && stamina_rating > 8.0 && !self.mods.rx() {
                 star_rating *= 0.8;
             }
         }
 
         self.attrs.stamina = stamina_rating;
-        self.attrs.colour = colour_rating;
+        if !self.mods.rx() {
+            self.attrs.colour = colour_rating;
+        } else {
+            self.attrs.colour = 0.0;
+        }
         self.attrs.rhythm = rhythm_rating;
         self.attrs.peak = combined_rating;
         self.attrs.stars = star_rating;

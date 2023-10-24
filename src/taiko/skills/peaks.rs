@@ -3,12 +3,14 @@ use std::cmp::Ordering;
 use crate::{
     taiko::difficulty_object::{ObjectLists, TaikoDifficultyObject},
     util::CompactVec,
+    Mods,
 };
 
 use super::{colour::Colour, rhythm::Rhythm, stamina::Stamina, Skill, StrainSkill};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Peaks {
+    mods: u32,
     colour: Colour,
     rhythm: Rhythm,
     stamina: Stamina,
@@ -23,10 +25,18 @@ impl Peaks {
 
     pub(crate) fn new() -> Self {
         Self {
+            mods: 0,
             colour: Colour::new(),
             rhythm: Rhythm::new(),
             stamina: Stamina::new(),
         }
+    }
+
+    #[inline]
+    pub fn mods(mut self, mods: u32) -> Self {
+        self.mods = mods;
+
+        self
     }
 
     pub(crate) fn difficulty_values(self) -> PeaksDifficultyValues {
@@ -82,11 +92,25 @@ impl Skill for Peaks {
             .zip(stamina_peaks.iter());
 
         for ((mut colour_peak, mut rhythm_peak), mut stamina_peak) in zip {
-            colour_peak *= Self::COLOUR_SKILL_MULTIPLIER;
-            rhythm_peak *= Self::RHYTHM_SKILL_MULTIPLIER;
+            if !self.mods.rx() {
+                colour_peak *= Self::COLOUR_SKILL_MULTIPLIER;
+            }
+
+            if self.mods.rx() {
+                rhythm_peak *= 0.1 * Self::FINAL_MULTIPLIER;
+            } else {
+                rhythm_peak *= Self::RHYTHM_SKILL_MULTIPLIER;
+            }
             stamina_peak *= Self::STAMINA_SKILL_MULTIPLIER;
 
-            let mut peak = Self::norm(1.5, [colour_peak, stamina_peak]);
+            let mut peak: f64;
+
+            if !self.mods.rx() {
+                peak = Self::norm(1.5, [colour_peak, stamina_peak]);
+            } else {
+                peak = Self::norm(1.5, [0.0, stamina_peak]);
+            }
+
             peak = Self::norm(2.0, [peak, rhythm_peak]);
 
             // * Sections with 0 strain are excluded to avoid worst-case

@@ -223,7 +223,7 @@ fn calculate_skills(params: TaikoStars<'_>) -> (Peaks, usize) {
     let mut take = passed_objects.unwrap_or(map.hit_objects.len());
     let clock_rate = clock_rate.unwrap_or_else(|| mods.clock_rate());
 
-    let mut peaks = Peaks::new();
+    let mut peaks = Peaks::new().mods(mods);
     let mut max_combo = 0;
 
     let mut diff_objects = map

@@ -21,6 +21,19 @@ mod mode;
 /// for difficulty and performance calculation
 #[derive(Clone, Default, Debug)]
 pub struct Beatmap {
+    /// The title.
+    pub title: String,
+    /// The song artist.    
+    pub artist: String,
+    /// The map version
+    pub difficulty: String,
+    /// The mapper.
+    pub creator: String,
+    /// The map id.
+    pub map_id: i32,
+    /// The set id.
+    pub set_id: i32,
+
     /// The game mode.
     pub mode: GameMode,
     /// The version of the .osu file.
@@ -215,6 +228,12 @@ impl Beatmap {
 
     fn clone_without_hit_objects(&self, with_sounds: bool) -> Self {
         Self {
+            title: self.title.clone(),
+            artist: self.artist.clone(),
+            difficulty: self.difficulty.clone(),
+            creator: self.creator.clone(),
+            map_id: self.map_id,
+            set_id: self.set_id,
             mode: self.mode,
             version: self.version,
             n_circles: 0,
