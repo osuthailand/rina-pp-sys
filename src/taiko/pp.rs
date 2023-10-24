@@ -338,9 +338,9 @@ impl TaikoPpInner {
         diff_value *= 0.986_f64.powf(effective_miss_count);
 
         if self.mods.ez() && self.mods.rx() {
-            multiplier *= 0.9;
+            diff_value *= 0.9;
         } else if self.mods.ez() {
-            multiplier *= 0.985;
+            diff_value *= 0.985;
         }
 
         if self.mods.hd() {

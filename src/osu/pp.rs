@@ -762,13 +762,14 @@ impl OsuPpInner {
         let mut pos = 0;
         let mut ratios: Vec<f64> = vec![];
 
-        let mut map_cs = self.map.cs.clone();
+        let mut map_cs = self.map.cs;
 
         if self.mods.hr() {
-            map_cs += map_cs * 0.3;
+            map_cs = self.map.cs * 0.3;
         } else if self.mods.ez() {
-            map_cs *= 2.0;
+            map_cs = self.map.cs * 2.0;
         }
+
         while pos + 1 < self.map.hit_objects.len() {
             let obj = &self.map.hit_objects[pos];
             let next_obj = &self.map.hit_objects[pos + 1];
