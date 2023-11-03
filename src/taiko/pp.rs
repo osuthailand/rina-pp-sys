@@ -347,12 +347,16 @@ impl TaikoPpInner {
             diff_value *= 1.025;
         }
 
-        if self.mods.hr() {
+        if self.mods.hr() && self.mods.rx() {
+            diff_value *= 1.12;
+        } else if self.mods.hr() {
             diff_value *= 1.05;
         }
 
         if self.mods.fl() {
             diff_value *= 1.05 * len_bonus;
+        } else if self.mods.fl() && self.mods.rx() {
+            diff_value *= 1.12 * len_bonus;
         }
 
         let acc = self.custom_accuracy();
@@ -380,6 +384,8 @@ impl TaikoPpInner {
         // * Slight HDFL Bonus for accuracy. A clamp is used to prevent against negative values
         if self.mods.hd() && self.mods.fl() {
             acc_value *= (1.075 * len_bonus).max(1.05);
+        } else if self.mods.hd() && self.mods.fl() && self.mods.rx() {
+            acc_value *= 1.15 * (len_bonus + 0.2);
         }
 
         acc_value
