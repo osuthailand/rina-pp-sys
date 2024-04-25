@@ -1,12 +1,12 @@
-[![crates.io](https://img.shields.io/crates/v/rosu-pp.svg)](https://crates.io/crates/rosu-pp) [![docs](https://docs.rs/rosu-pp/badge.svg)](https://docs.rs/rosu-pp)
+[![crates.io](https://img.shields.io/crates/v/rina-pp.svg)](https://crates.io/crates/rina-pp) [![docs](https://docs.rs/rina-pp/badge.svg)](https://docs.rs/rina-pp)
 
-# rosu-pp
+# rina-pp
 
 <!-- cargo-rdme start -->
 
 Library to calculate difficulty and performance attributes for all [osu!] gamemodes.
 
-A large part of `rosu-pp` is a port of [osu!lazer]'s difficulty and performance calculation
+A large part of `rina-pp` is a port of [osu!lazer]'s difficulty and performance calculation
 with emphasis on a precise translation to Rust for the most [accurate results](#accuracy)
 while also providing a significant [boost in performance](#speed).
 
@@ -24,17 +24,17 @@ News posts of the latest gamemode updates:
 
 ```rust
 // Decode the map
-let map = rosu_pp::Beatmap::from_path("./resources/2785319.osu").unwrap();
+let map = rina_pp::Beatmap::from_path("./resources/2785319.osu").unwrap();
 
 // Calculate difficulty attributes
-let diff_attrs = rosu_pp::Difficulty::new()
+let diff_attrs = rina_pp::Difficulty::new()
     .mods(8 + 16) // HDHR
     .calculate(&map);
 
 let stars = diff_attrs.stars();
 
 // Calculate performance attributes
-let perf_attrs = rosu_pp::Performance::new(diff_attrs)
+let perf_attrs = rina_pp::Performance::new(diff_attrs)
     // To speed up the calculation, we used the previous attributes.
     // **Note** that this should only be done if the map and all difficulty
     // settings stay the same, otherwise the final attributes will be incorrect!
@@ -65,7 +65,7 @@ and for performance attributes there is `GradualPerformance` which requires the 
 score state.
 
 ```rust
-use rosu_pp::{Beatmap, GradualPerformance, Difficulty, any::ScoreState};
+use rina_pp::{Beatmap, GradualPerformance, Difficulty, any::ScoreState};
 
 let map = Beatmap::from_path("./resources/1028484.osu").unwrap();
 
@@ -95,29 +95,29 @@ println!("PP: {}", attrs.pp());
 
 ### Accuracy
 
-`rosu-pp` was tested against all current beatmaps on multiple mod combinations and delivered
+`rina-pp` was tested against all current beatmaps on multiple mod combinations and delivered
 values that matched osu!lazer perfectly down to the last decimal place.
 
 However, there is one small caveat: the values are only this precise on debug mode.
 On release mode, Rust's compiler performs optimizations that produce the tiniest discrepancies
 due to floating point inaccuracies which can cascade into larger differences in the end.
-With this in mind, `rosu-pp` is still as accurate as can be without targeting the
+With this in mind, `rina-pp` is still as accurate as can be without targeting the
 .NET compiler itself. Realistically, the inaccuracies in release mode are negligibly small.
 
 ### Speed
 
-An important factor for `rosu-pp` is the calculation speed. Optimizations and an accurate translation
+An important factor for `rina-pp` is the calculation speed. Optimizations and an accurate translation
 unfortunately don't always go hand-in-hand. Nonetheless, performance improvements are still
 snuck in wherever possible, providing a significantly faster runtime than the native C# code.
 
-Results of a rudimentary [benchmark] of osu!lazer and rosu-pp:
+Results of a rudimentary [benchmark] of osu!lazer and rina-pp:
 ```txt
 osu!lazer:
 Decoding maps:            Median: 378.10ms | Mean: 381.47ms
 Calculating difficulties: Median: 588.89ms | Mean: 597.11ms
 Calculating performances: Median: 315.90µs | Mean: 310.60µs
 
-rosu-pp:
+rina-pp:
 Decoding maps:            Median: 46.94ms | Mean: 47.21ms
 Calculating difficulties: Median: 72.90ms | Mean: 73.13ms
 Calculating performances: Median: 44.13µs | Mean: 45.53µs
@@ -134,16 +134,16 @@ Calculating performances: Median: 44.13µs | Mean: 45.53µs
 
 ### Bindings
 
-Using `rosu-pp` from other languages than Rust:
-- JavaScript: [rosu-pp-js]
-- Python: [rosu-pp-py]
+Using `rina-pp` from other languages than Rust:
+- JavaScript: [rina-pp-js]
+- Python: [rina-pp-py]
 
 [osu!]: https://osu.ppy.sh/home
 [osu!lazer]: https://github.com/ppy/osu
 [osu!tools]: https://github.com/ppy/osu-tools
 [`tracing`]: https://docs.rs/tracing
-[rosu-pp-js]: https://github.com/MaxOhn/rosu-pp-js
-[rosu-pp-py]: https://github.com/MaxOhn/rosu-pp-py
+[rina-pp-js]: https://github.com/MaxOhn/rina-pp-js
+[rina-pp-py]: https://github.com/MaxOhn/rina-pp-py
 [benchmark]: https://gist.github.com/MaxOhn/625af10011f6d7e13a171b08ccf959ff
 
 <!-- cargo-rdme end -->

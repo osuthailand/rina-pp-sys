@@ -32,7 +32,7 @@ use crate::{model::mode::IGameMode, util::mods::Mods};
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, Difficulty, any::DifficultyAttributes};
+/// use rina_pp::{Beatmap, Difficulty, any::DifficultyAttributes};
 ///
 /// let map = Beatmap::from_path("./resources/2118524.osu").unwrap();
 ///

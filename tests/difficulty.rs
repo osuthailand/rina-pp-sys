@@ -1,6 +1,6 @@
 use std::panic::{self, UnwindSafe};
 
-use rosu_pp::{
+use rina_pp::{
     catch::{Catch, CatchDifficultyAttributes},
     mania::{Mania, ManiaDifficultyAttributes},
     osu::{Osu, OsuDifficultyAttributes},

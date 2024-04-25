@@ -553,39 +553,24 @@ impl OsuPerformanceInner {
             multiplier *= 1.0 - (f64::from(self.attrs.n_spinners) / total_hits).powf(0.85);
         }
 
-        if self.mods.rx() {
-            // * https://www.desmos.com/calculator/bc9eybdthb
-            // * we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
-            // * this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
-            let (n100_mult, n50_mult) = if self.attrs.od > 0.0 {
-                (
-                    1.0 - (self.attrs.od / 13.33).powf(1.8),
-                    1.0 - (self.attrs.od / 13.33).powf(5.0),
-                )
-            } else {
-                (1.0, 1.0)
-            };
-
-            // * As we're adding Oks and Mehs to an approximated number of combo breaks the result can be
-            // * higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
-            self.effective_miss_count = (self.effective_miss_count
-                + f64::from(self.state.n100)
-                + n100_mult
-                + f64::from(self.state.n50) * n50_mult)
-                .min(total_hits);
-        }
-
         let aim_value = self.compute_aim_value();
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
 
-        let pp = (aim_value.powf(1.1)
+        let pp = if self.mods.rx() { 
+            (aim_value.powf(1.1)
+            + speed_value.powf(0.9)
+            + acc_value.powf(1.1)
+            + flashlight_value.powf(1.1))
+            .powf(1.0 / 1.1) * multiplier 
+        } else {
+            (aim_value.powf(1.1)
             + speed_value.powf(1.1)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
-        .powf(1.0 / 1.1)
-            * multiplier;
+            .powf(1.0 / 1.1) * multiplier
+        };
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -612,9 +597,15 @@ impl OsuPerformanceInner {
         // * Penalize misses by assessing # of misses relative to the total # of objects.
         // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            aim_value *= 0.97
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                    .powf(self.effective_miss_count);
+            if self.mods.rx() {
+                aim_value *= 0.97
+                    * (0.9 - (self.effective_miss_count / total_hits).powf(1.1))
+                        .powf(self.effective_miss_count);
+            } else {
+                aim_value *= 0.97
+                    * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
+                        .powf(self.effective_miss_count);
+            }
         }
 
         aim_value *= self.get_combo_scaling_factor();
@@ -630,7 +621,11 @@ impl OsuPerformanceInner {
         };
 
         // * Buff for longer maps with high AR.
-        aim_value *= 1.0 + ar_factor * len_bonus;
+        if self.mods.rx() {
+            aim_value *= 1.0 + ar_factor;
+        } else {
+            aim_value *= 1.0 + ar_factor * len_bonus
+        }
 
         if self.mods.hd() {
             // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
@@ -656,6 +651,27 @@ impl OsuPerformanceInner {
         aim_value *= self.acc;
         // * It is important to consider accuracy difficulty when scaling with accuracy.
         aim_value *= 0.98 + self.attrs.od.powf(2.0) / 2500.0;
+
+        if self.mods.rx() {
+            let diff_ratio = self.get_distance_duration_ratio();
+            let mut length = self.attrs.hit_length();
+
+            // dt cuts length
+            if self.mods.dt() {
+                length /= 1.5;
+            }
+
+            if self.mods.dt() {
+                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.4;
+            } else {
+                aim_value *= 2.31_f64.powf(1.1 + diff_ratio / 4.0) * 0.4;
+            };
+
+            // nerf short maps
+            if length <= 65.0_f64 {
+                aim_value *= (length / 489.0).sqrt() * 1.4 + 0.49
+            }
+        }
 
         aim_value
     }
@@ -810,7 +826,7 @@ impl OsuPerformanceInner {
     }
 
     fn get_combo_scaling_factor(&self) -> f64 {
-        if self.attrs.max_combo == 0 {
+        if self.attrs.max_combo == 0 || self.mods.rx() {
             1.0
         } else {
             (f64::from(self.state.max_combo).powf(0.8) / f64::from(self.attrs.max_combo).powf(0.8))
@@ -820,6 +836,55 @@ impl OsuPerformanceInner {
 
     const fn total_hits(&self) -> f64 {
         self.state.total_hits() as f64
+    }
+
+    fn get_distance_duration_ratio(&self) -> f64 {
+        let mut pos = 0;
+        let mut ratios: Vec<f64> = vec![];
+
+        let mut map_cs = self.attrs.cs;
+
+        if self.mods.hr() {
+            map_cs = self.attrs.cs * 0.3;
+        } else if self.mods.ez() {
+            map_cs = self.attrs.cs * 2.0;
+        }
+
+        while pos + 1 < self.attrs.hit_objects.len() {
+            let obj = &self.attrs.hit_objects[pos];
+            let next_obj = &self.attrs.hit_objects[pos + 1];
+
+            if !obj.is_circle() || !next_obj.is_circle() {
+                pos += 1;
+                continue;
+            }
+
+            let _dist = (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2);
+            let mut dist = _dist.sqrt();
+
+            // calculate the circle radius of the 2 circles and subtract it from distance.
+            let r = 54.4 - 4.48 * map_cs;
+            dist -= r * 2.0;
+
+            let mut duration = next_obj.start_time - obj.end_time();
+            if self.mods.dt() {
+                duration /= 1.44; // should be 1.5, but it buffs maps too much
+            }
+
+            let mut ratio = 0.0;
+
+            if duration != 0.0 {
+                ratio = dist as f64 / duration;
+            }
+
+            ratios.push(ratio);
+
+            pos += 1;
+        }
+
+        let sum: f64 = ratios.iter().sum();
+        let count = ratios.len() as f64;
+        sum / count
     }
 }
 

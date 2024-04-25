@@ -1,12 +1,11 @@
 [package]
-name = "rosu-pp"
-version = "1.0.0"
+name = "rina-pp"
+version = "0.9.24"
 edition = "2021"
-authors = ["MaxOhn <ohn.m@hotmail.de>"]
+authors = ["MaxOhn <ohn.m@hotmail.de>", "Simon G."]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/MaxOhn/rosu-pp"
-documentation = "https://docs.rs/rosu-pp/"
+repository = "https://github.com/osuthailand/rina-pp"
 description = "Difficulty and performance calculation for osu!"
 keywords = ["osu", "pp", "stars", "performance", "difficulty"]
 
@@ -18,6 +17,7 @@ tracing = ["rosu-map/tracing"]
 
 [dependencies]
 rosu-map = { version = "0.1.1" }
+mysql = "*"
 
 [dev-dependencies]
 proptest = "1.4.0"

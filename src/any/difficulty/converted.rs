@@ -14,8 +14,8 @@ use crate::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, Difficulty};
-/// use rosu_pp::catch::{Catch, CatchDifficultyAttributes};
+/// use rina_pp::{Beatmap, Difficulty};
+/// use rina_pp::catch::{Catch, CatchDifficultyAttributes};
 ///
 /// let converted = Beatmap::from_path("./resources/2118524.osu")
 ///     .unwrap()
