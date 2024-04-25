@@ -412,38 +412,24 @@ impl OsuPpInner {
             multiplier *= 1.0 - (self.attrs.n_spinners as f64 / total_hits).powf(0.85);
         }
 
-        // if self.mods.rx() {
-        //     // * https://www.desmos.com/calculator/bc9eybdthb
-        //     // * we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
-        //     // * this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
-        //     let (n100_mult, n50_mult) = if self.attrs.od > 0.0 {
-        //         (
-        //             1.0 - (self.attrs.od / 13.33).powf(1.8),
-        //             1.0 - (self.attrs.od / 13.33).powi(5),
-        //         )
-        //     } else {
-        //         (1.0, 1.0)
-        //     };
-
-        //     // * As we're adding Oks and Mehs to an approximated number of combo breaks the result can be
-        //     // * higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
-        //     self.effective_miss_count = (self.effective_miss_count
-        //         + self.state.n100 as f64
-        //         + n100_mult
-        //         + self.state.n50 as f64 * n50_mult)
-        //         .min(total_hits);
-        // }
-
         let aim_value = self.compute_aim_value();
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-        let pp = (aim_value.powf(1.1)
+
+        let pp = if self.mods.rx() { (aim_value.powf(1.1)
+            + speed_value.powf(0.9)
+            + acc_value.powf(1.1)
+            + flashlight_value.powf(1.1))
+        .powf(1.0 / 1.1)
+            * multiplier } else {
+                (aim_value.powf(1.1)
             + speed_value.powf(1.1)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
-            * multiplier;
+            * multiplier
+            };
         OsuPerformanceAttributes {
             difficulty: self.attrs,
             pp_acc: acc_value,
@@ -457,12 +443,6 @@ impl OsuPpInner {
 
     fn compute_aim_value(&self) -> f64 {
         let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
-
-        // stream aim nerf
-        if (self.attrs.aim / self.attrs.speed) < 1.03 && self.mods.rx() {
-            aim_value *= (self.attrs.aim / self.attrs.speed - 0.5).max(0.2).min(0.9)
-        }
-
         let total_hits = self.total_hits();
 
         let len_bonus = 0.95
@@ -476,8 +456,8 @@ impl OsuPpInner {
         if self.effective_miss_count > 0.0 {
             if self.mods.rx() {
                 aim_value *= 0.97
-                    * (0.94 - (self.effective_miss_count / total_hits).powf(0.775))
-                        .powf(self.effective_miss_count.powf(0.875));
+                    * (0.9 - (self.effective_miss_count / total_hits).powf(1.1))
+                        .powf(self.effective_miss_count);
             } else {
                 aim_value *= 0.97
                     * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
@@ -656,8 +636,11 @@ impl OsuPpInner {
 
         // * Lots of arbitrary values from testing.
         // * Considering to use derivation from perfect accuracy in a probabilistic manner - assume normal distribution.
-        let mut acc_value =
-            1.492_f64.powf(self.attrs.od) * (better_acc_percentage).powi(28).sqrt() * 2.5;
+        let mut acc_value = if self.mods.rx() {
+            1.492_f64.powf(self.attrs.od) * better_acc_percentage.powi(28).sqrt() * 2.5
+        } else {
+            1.52163_f64.powf(self.attrs.od) * better_acc_percentage.powi(24) * 2.83
+        };
         // * Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
 
         if amount_hit_objects_with_acc > 1000 {
