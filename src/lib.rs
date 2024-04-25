@@ -160,8 +160,6 @@
     clippy::cast_possible_wrap
 )]
 
-#![feature(round_ties_even, precise_pointer_size_matching)]
-
 #[doc(inline)]
 pub use self::{
     any::{Difficulty, GradualDifficulty, GradualPerformance, Performance},

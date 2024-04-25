@@ -531,7 +531,7 @@ struct OsuPerformanceInner {
 }
 
 impl OsuPerformanceInner {
-    fn calculate(mut self) -> OsuPerformanceAttributes {
+    fn calculate(self) -> OsuPerformanceAttributes {
         let total_hits = self.state.total_hits();
 
         if total_hits == 0 {
