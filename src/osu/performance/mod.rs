@@ -652,27 +652,6 @@ impl OsuPerformanceInner {
         // * It is important to consider accuracy difficulty when scaling with accuracy.
         aim_value *= 0.98 + self.attrs.od.powf(2.0) / 2500.0;
 
-        if self.mods.rx() {
-            let diff_ratio = self.get_distance_duration_ratio();
-            let mut length = self.attrs.hit_length();
-
-            // dt cuts length
-            if self.mods.dt() {
-                length /= 1.5;
-            }
-
-            if self.mods.dt() {
-                aim_value *= 2.31_f64.powf(1.0 + diff_ratio / 11.0) * 0.4;
-            } else {
-                aim_value *= 2.31_f64.powf(1.1 + diff_ratio / 4.0) * 0.4;
-            };
-
-            // nerf short maps
-            if length <= 65.0_f64 {
-                aim_value *= (length / 489.0).sqrt() * 1.4 + 0.49
-            }
-        }
-
         aim_value
     }
 
@@ -836,55 +815,6 @@ impl OsuPerformanceInner {
 
     const fn total_hits(&self) -> f64 {
         self.state.total_hits() as f64
-    }
-
-    fn get_distance_duration_ratio(&self) -> f64 {
-        let mut pos = 0;
-        let mut ratios: Vec<f64> = vec![];
-
-        let mut map_cs = self.attrs.cs;
-
-        if self.mods.hr() {
-            map_cs = self.attrs.cs * 0.3;
-        } else if self.mods.ez() {
-            map_cs = self.attrs.cs * 2.0;
-        }
-
-        while pos + 1 < self.attrs.hit_objects.len() {
-            let obj = &self.attrs.hit_objects[pos];
-            let next_obj = &self.attrs.hit_objects[pos + 1];
-
-            if !obj.is_circle() || !next_obj.is_circle() {
-                pos += 1;
-                continue;
-            }
-
-            let _dist = (next_obj.pos.x - obj.pos.x).powi(2) + (next_obj.pos.y - obj.pos.y).powi(2);
-            let mut dist = _dist.sqrt();
-
-            // calculate the circle radius of the 2 circles and subtract it from distance.
-            let r = 54.4 - 4.48 * map_cs;
-            dist -= r * 2.0;
-
-            let mut duration = next_obj.start_time - obj.end_time();
-            if self.mods.dt() {
-                duration /= 1.44; // should be 1.5, but it buffs maps too much
-            }
-
-            let mut ratio = 0.0;
-
-            if duration != 0.0 {
-                ratio = dist as f64 / duration;
-            }
-
-            ratios.push(ratio);
-
-            pos += 1;
-        }
-
-        let sum: f64 = ratios.iter().sum();
-        let count = ratios.len() as f64;
-        sum / count
     }
 }
 
