@@ -1,6 +1,6 @@
 use std::cmp;
 
-use rosu_map::section::general::GameMode;
+use rosu_map::{section::general::GameMode};
 
 use crate::{
     any::{Difficulty, HitResultPriority, IntoModePerformance, IntoPerformance, Performance},
@@ -610,9 +610,7 @@ impl OsuPerformanceInner {
 
         aim_value *= self.get_combo_scaling_factor();
 
-        let ar_factor = if self.mods.rx() {
-            0.0
-        } else if self.attrs.ar > 10.33 {
+        let ar_factor = if self.attrs.ar > 10.33 {
             0.3 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
             0.05 * (8.0 - self.attrs.ar)
@@ -624,7 +622,7 @@ impl OsuPerformanceInner {
         if self.mods.rx() {
             aim_value *= 1.0 + ar_factor;
         } else {
-            aim_value *= 1.0 + ar_factor * len_bonus
+            aim_value *= 1.0 + ar_factor * len_bonus;
         }
 
         if self.mods.hd() {
@@ -656,10 +654,6 @@ impl OsuPerformanceInner {
     }
 
     fn compute_speed_value(&self) -> f64 {
-        if self.mods.rx() {
-            return 0.0;
-        }
-
         let mut speed_value =
             (5.0 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powf(3.0) / 100_000.0;
 
@@ -727,10 +721,6 @@ impl OsuPerformanceInner {
     }
 
     fn compute_accuracy_value(&self) -> f64 {
-        if self.mods.rx() {
-            return 0.0;
-        }
-
         // * This percentage only considers HitCircles of any value - in this part
         // * of the calculation we focus on hitting the timing hit window.
         let amount_hit_objects_with_acc = self.attrs.n_circles;

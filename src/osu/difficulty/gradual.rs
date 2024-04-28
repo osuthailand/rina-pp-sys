@@ -176,6 +176,7 @@ impl Iterator for OsuGradualDifficulty {
         let speed_difficulty_value = self.skills.speed.as_difficulty_value();
         let flashlight_difficulty_value = self.skills.flashlight.as_difficulty_value();
 
+
         DifficultyValues::eval(
             &mut attrs,
             self.difficulty.get_mods(),
@@ -184,6 +185,8 @@ impl Iterator for OsuGradualDifficulty {
             speed_difficulty_value,
             speed_relevant_note_count,
             flashlight_difficulty_value,
+            // not sure if we will every utilize this feature for pp system, so hit_objects shouldn't matter
+            vec![]
         );
 
         Some(attrs)

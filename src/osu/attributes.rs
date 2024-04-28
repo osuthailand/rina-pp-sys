@@ -1,4 +1,4 @@
-use crate::osu::performance::OsuPerformance;
+use crate::{model::hit_object::HitObject, osu::performance::OsuPerformance};
 
 /// The result of a difficulty calculation on an osu!standard map.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -13,6 +13,8 @@ pub struct OsuDifficultyAttributes {
     pub slider_factor: f64,
     /// The number of clickable objects weighted by difficulty.
     pub speed_note_count: f64,
+    /// The circle size.
+    pub cs: f64,
     /// The approach rate.
     pub ar: f64,
     /// The overall difficulty
@@ -29,6 +31,8 @@ pub struct OsuDifficultyAttributes {
     pub stars: f64,
     /// The maximum combo.
     pub max_combo: u32,
+    /// List of all objects.
+    pub hit_objects: Vec<HitObject>,
 }
 
 impl OsuDifficultyAttributes {
