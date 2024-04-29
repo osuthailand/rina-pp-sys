@@ -560,17 +560,15 @@ impl OsuPerformanceInner {
 
         let aim_speed_ratio = self.attrs.aim / self.attrs.speed;
         let speed_nerf = if 1.05 > aim_speed_ratio && aim_speed_ratio > 0.92 {
-            2.0 * aim_speed_ratio - 1.3
+            1.5 * aim_speed_ratio - 0.7
         } else if aim_speed_ratio <= 0.92 {
-            0.5 * aim_speed_ratio
+            0.7 * aim_speed_ratio
         } else {
             1.0
         };
 
-        println!("{:.2}", 1.1 * speed_nerf.powf(0.65));
-
         let pp = if self.mods.rx() { 
-            (aim_value.powf(1.1 * speed_nerf.powf(0.65))
+            (aim_value.powf(1.1 * speed_nerf.powf(0.6))
             + speed_value.powf(speed_nerf)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
