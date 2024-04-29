@@ -2,7 +2,7 @@ use std::{cmp, pin::Pin};
 
 use crate::{
     any::difficulty::{skills::Skill, Difficulty},
-    model::{beatmap::BeatmapAttributes, hit_object::HitObject},
+    model::beatmap::BeatmapAttributes,
     osu::{
         convert::convert_objects,
         difficulty::{object::OsuDifficultyObject, scaling_factor::ScalingFactor},
@@ -45,7 +45,6 @@ pub fn difficulty(difficulty: &Difficulty, converted: &OsuBeatmap<'_>) -> OsuDif
     let flashlight_difficulty_value = flashlight.difficulty_value();
 
     let mods = difficulty.get_mods();
-    let hit_objects = converted.hit_objects.clone();
 
     DifficultyValues::eval(
         &mut attrs,
@@ -55,7 +54,6 @@ pub fn difficulty(difficulty: &Difficulty, converted: &OsuBeatmap<'_>) -> OsuDif
         speed_difficulty_value,
         speed_relevant_note_count,
         flashlight_difficulty_value,
-        hit_objects,
     );
 
     attrs
@@ -78,7 +76,6 @@ impl OsuDifficultySetup {
             ar: map_attrs.ar,
             hp: map_attrs.hp,
             od: map_attrs.od,
-            cs: map_attrs.cs,
             ..Default::default()
         };
 
@@ -155,7 +152,6 @@ impl DifficultyValues {
         speed_difficulty_value: f64,
         speed_relevant_note_count: f64,
         flashlight_difficulty_value: f64,
-        hit_objects: Vec<HitObject>,
     ) {
         let mut aim_rating = aim_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
         let aim_rating_no_sliders = aim_no_sliders_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
@@ -173,11 +169,11 @@ impl DifficultyValues {
             flashlight_rating = flashlight_rating.powf(0.8);
         }
 
-        if mods.rx() {
-            aim_rating *= 0.9;
-            speed_rating = 0.0;
-            flashlight_rating *= 0.7;
-        }
+        // if mods.rx() {
+        //     aim_rating *= 0.9;
+        //     speed_rating = 0.0;
+        //     flashlight_rating *= 0.7;
+        // }
 
         let base_aim_performance =
             (5.0 * (aim_rating / 0.0675).max(1.0) - 4.0).powf(3.0) / 100_000.0;
@@ -209,7 +205,6 @@ impl DifficultyValues {
         attrs.slider_factor = slider_factor;
         attrs.stars = star_rating;
         attrs.speed_note_count = speed_relevant_note_count;
-        attrs.hit_objects = hit_objects;
     }
 
     pub fn create_difficulty_objects<'a>(

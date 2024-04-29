@@ -558,9 +558,20 @@ impl OsuPerformanceInner {
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
 
+        let aim_speed_ratio = self.attrs.aim / self.attrs.speed;
+        let speed_nerf = if 1.05 > aim_speed_ratio && aim_speed_ratio > 0.92 {
+            2.0 * aim_speed_ratio - 1.3
+        } else if aim_speed_ratio <= 0.92 {
+            0.5 * aim_speed_ratio
+        } else {
+            1.0
+        };
+
+        println!("{:.2}", 1.1 * speed_nerf.powf(0.65));
+
         let pp = if self.mods.rx() { 
-            (aim_value.powf(1.1)
-            + speed_value.powf(0.9)
+            (aim_value.powf(1.1 * speed_nerf.powf(0.65))
+            + speed_value.powf(speed_nerf)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
             .powf(1.0 / 1.1) * multiplier 
@@ -599,7 +610,7 @@ impl OsuPerformanceInner {
         if self.effective_miss_count > 0.0 {
             if self.mods.rx() {
                 aim_value *= 0.97
-                    * (0.9 - (self.effective_miss_count / total_hits).powf(1.1))
+                    * (0.95 - (self.effective_miss_count / total_hits).powf(1.1))
                         .powf(self.effective_miss_count);
             } else {
                 aim_value *= 0.97
@@ -611,19 +622,23 @@ impl OsuPerformanceInner {
         aim_value *= self.get_combo_scaling_factor();
 
         let ar_factor = if self.attrs.ar > 10.33 {
-            0.3 * (self.attrs.ar - 10.33)
+            if self.mods.rx() {
+                1.2_f64.powf(self.attrs.ar - 10.33) - 1.0
+            } else {
+                0.3 * (self.attrs.ar - 10.33)
+            }
         } else if self.attrs.ar < 8.0 {
-            0.05 * (8.0 - self.attrs.ar)
+            if self.mods.rx() {
+                0.0
+            } else {
+                0.05 * (8.0 - self.attrs.ar)
+            }
         } else {
             0.0
         };
 
         // * Buff for longer maps with high AR.
-        if self.mods.rx() {
-            aim_value *= 1.0 + ar_factor;
-        } else {
-            aim_value *= 1.0 + ar_factor * len_bonus;
-        }
+        aim_value *= 1.0 + ar_factor * len_bonus;
 
         if self.mods.hd() {
             // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
