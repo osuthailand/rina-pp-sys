@@ -155,7 +155,7 @@ impl DifficultyValues {
     ) {
         let mut aim_rating = aim_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
         let aim_rating_no_sliders = aim_no_sliders_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
-        let mut speed_rating = speed_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
+        let speed_rating = speed_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
         let mut flashlight_rating = flashlight_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
 
         let slider_factor = if aim_rating > 0.0 {
