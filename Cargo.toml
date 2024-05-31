@@ -1,11 +1,11 @@
 [package]
 name = "rina-pp"
-version = "0.9.26"
+version = "0.9.27"
 edition = "2021"
 authors = ["MaxOhn <ohn.m@hotmail.de>", "Simon G."]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/osuthailand/rina-pp"
+repository = "https://github.com/osuthailand/rina-pp-sys"
 description = "Difficulty and performance calculation for osu!"
 keywords = ["osu", "pp", "stars", "performance", "difficulty"]
 
