@@ -811,7 +811,7 @@ impl OsuPerformanceInner {
         if self.attrs.max_combo == 0 {
             1.0
         } else if self.mods.rx() {
-            ((f64::from(self.state.max_combo) / f64::from(self.attrs.max_combo)).log10() * 0.56 + 1.0).max(0.0)
+            (f64::from(self.state.max_combo).sqrt() / f64::from(self.attrs.max_combo).sqrt()).powf(0.84).min(1.0)
         } else {
             (f64::from(self.state.max_combo).powf(0.8) / f64::from(self.attrs.max_combo).powf(0.8))
                 .min(1.0)
