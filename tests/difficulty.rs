@@ -31,7 +31,9 @@ macro_rules! test_cases {
     };
     ( @Osu {
         aim: $aim:literal,
+        aim_strain_difficulty: $aim_strain_difficulty:literal,
         speed: $speed:literal,
+        speed_strain_difficulty: $speed_strain_difficulty:literal,
         flashlight: $flashlight:literal,
         slider_factor: $slider_factor:literal,
         speed_note_count: $speed_note_count:literal,
@@ -46,6 +48,8 @@ macro_rules! test_cases {
     }) => {
         OsuDifficultyAttributes {
             aim: $aim,
+            aim_strain_difficulty: $aim_strain_difficulty,
+            speed_strain_difficulty: $speed_strain_difficulty,
             speed: $speed,
             flashlight: $flashlight,
             slider_factor: $slider_factor,
@@ -122,7 +126,9 @@ fn basic_osu() {
         Osu: OSU {
             NM => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.288770487900865,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -137,7 +143,9 @@ fn basic_osu() {
             };
             HD => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.606877929965889,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -152,7 +160,9 @@ fn basic_osu() {
             };
             HR => {
                 aim: 3.2385394176190507,
+                aim_strain_difficulty: 0.0,
                 speed: 2.7009854505234308,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.8549217213059936,
                 slider_factor: 0.9690667605258665,
                 speed_note_count: 184.01205359079387,
@@ -167,7 +177,9 @@ fn basic_osu() {
             };
             DT => {
                 aim: 4.041442573946681,
+                aim_strain_difficulty: 0.0,
                 speed: 3.6784866216272474,
+                speed_strain_difficulty: 0.0,
                 flashlight: 3.319522943625448,
                 slider_factor: 0.9776943279272041,
                 speed_note_count: 214.80421464205617,
@@ -182,7 +194,9 @@ fn basic_osu() {
             };
             FL => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.288770487900865,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -197,7 +211,9 @@ fn basic_osu() {
             };
             HD FL => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.606877929965889,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -217,7 +233,9 @@ fn basic_osu() {
         Osu: OSU {
             NM => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.288770487900865,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -232,7 +250,9 @@ fn basic_osu() {
             };
             HD => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.606877929965889,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -247,7 +267,9 @@ fn basic_osu() {
             };
             HR => {
                 aim: 3.2385394176190507,
+                aim_strain_difficulty: 0.0,
                 speed: 2.7009854505234308,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.8549217213059936,
                 slider_factor: 0.9690667605258665,
                 speed_note_count: 184.01205359079387,
@@ -262,7 +284,9 @@ fn basic_osu() {
             };
             DT => {
                 aim: 4.041442573946681,
+                aim_strain_difficulty: 0.0,
                 speed: 3.6784866216272474,
+                speed_strain_difficulty: 0.0,
                 flashlight: 3.319522943625448,
                 slider_factor: 0.9776943279272041,
                 speed_note_count: 214.80421464205617,
@@ -277,7 +301,9 @@ fn basic_osu() {
             };
             FL => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.288770487900865,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -292,7 +318,9 @@ fn basic_osu() {
             };
             HD FL => {
                 aim: 2.8693628443424104,
+                aim_strain_difficulty: 0.0,
                 speed: 2.533869745015772,
+                speed_strain_difficulty: 0.0,
                 flashlight: 2.606877929965889,
                 slider_factor: 0.9803052946037858,
                 speed_note_count: 210.36373973116545,
@@ -521,6 +549,7 @@ where
 
 impl AssertEq for OsuDifficultyAttributes {
     fn assert_eq(&self, expected: &Self) {
+        println!("{} - {}", self.aim_strain_difficulty, expected.aim);
         assert_eq_float(self.aim, expected.aim);
         assert_eq_float(self.speed, expected.speed);
         assert_eq_float(self.flashlight, expected.flashlight);

@@ -54,7 +54,6 @@ pub fn difficulty(
         peaks.rhythm_difficulty_value()
     };
 
-    println!("{}", color_rating);
     let stamina_rating = peaks.stamina_difficulty_value();
     let combined_rating = peaks.difficulty_value();
 

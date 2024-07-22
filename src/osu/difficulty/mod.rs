@@ -39,6 +39,7 @@ pub fn difficulty(difficulty: &Difficulty, converted: &OsuBeatmap<'_>) -> OsuDif
     } = DifficultyValues::calculate(difficulty, converted);
 
     let aim_difficulty_value = aim.difficulty_value();
+
     let aim_no_sliders_difficulty_value = aim_no_sliders.difficulty_value();
     let speed_relevant_note_count = speed.relevant_note_count();
     let speed_difficulty_value = speed.difficulty_value();
@@ -138,6 +139,9 @@ impl DifficultyValues {
                 speed.process(hit_object);
                 flashlight.process(hit_object);
             }
+
+            attrs.aim_strain_difficulty = aim.count_difficult_strains();
+            attrs.speed_strain_difficulty = speed.count_difficult_strains();
         }
 
         Self { skills, attrs }

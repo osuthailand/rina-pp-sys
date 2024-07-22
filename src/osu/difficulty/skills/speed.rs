@@ -135,6 +135,19 @@ impl<'a> Skill<'a, Speed> {
 
         total_strain
     }
+
+    pub fn count_difficult_strains(&self) -> f64 {
+        let difficulty = self.inner.as_difficulty_value();
+
+        if difficulty == 0.0 {
+            0.0
+        } else {
+            self.inner.object_strains
+                .iter()
+                .map(|&strain| 1.1 / (1.0 + ((-10.0 * (strain / (difficulty - 10.0) - 0.88)) as f64).exp()))
+                .sum()
+        }
+    }
 }
 
 struct SpeedEvaluator;

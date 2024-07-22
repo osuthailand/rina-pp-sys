@@ -5,8 +5,12 @@ use crate::osu::performance::OsuPerformance;
 pub struct OsuDifficultyAttributes {
     /// The difficulty of the aim skill.
     pub aim: f64,
+    /// The difficulty strain of the aim skill.
+    pub aim_strain_difficulty: f64,
     /// The difficulty of the speed skill.
     pub speed: f64,
+    /// The difficulty strain of the aim skill.
+    pub speed_strain_difficulty: f64,
     /// The difficulty of the flashlight skill.
     pub flashlight: f64,
     /// The ratio of the aim strain with and without considering sliders

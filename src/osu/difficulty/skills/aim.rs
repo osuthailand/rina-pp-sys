@@ -18,6 +18,7 @@ const STRAIN_DECAY_BASE: f64 = 0.15;
 pub struct Aim {
     with_sliders: bool,
     curr_strain: f64,
+    object_strains: Vec<f64>,
     inner: OsuStrainSkill,
 }
 
@@ -26,6 +27,7 @@ impl Aim {
         Self {
             with_sliders,
             curr_strain: 0.0,
+            object_strains: vec![],
             inner: OsuStrainSkill::default(),
         }
     }
@@ -106,7 +108,23 @@ impl<'a> Skill<'a, Aim> {
             AimEvaluator::evaluate_diff_of(curr, self.diff_objects, self.inner.with_sliders)
                 * SKILL_MULTIPLIER;
 
+        self.inner.object_strains.push(self.inner.curr_strain);
+
         self.inner.curr_strain
+    }
+
+    pub fn count_difficult_strains(&self) -> f64 {
+        let difficulty = self.inner.as_difficulty_value();
+
+        if difficulty == 0.0 {
+            0.0
+        } else {
+            println!("object strains: {:?}", self.inner.object_strains);
+            self.inner.object_strains
+                .iter()
+                .map(|&strain| 1.1 / (1.0 + ((-10.0 * (strain / (difficulty - 10.0) - 0.88)) as f64).exp()))
+                .sum()
+        }
     }
 }
 

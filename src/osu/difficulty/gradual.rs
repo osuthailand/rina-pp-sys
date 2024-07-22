@@ -187,6 +187,9 @@ impl Iterator for OsuGradualDifficulty {
             flashlight_difficulty_value,
         );
 
+        attrs.aim_strain_difficulty = Skill::new(&mut self.skills.aim, &self.diff_objects).count_difficult_strains();
+        attrs.speed_strain_difficulty = Skill::new(&mut self.skills.speed, &self.diff_objects).count_difficult_strains();
+
         Some(attrs)
     }
 
