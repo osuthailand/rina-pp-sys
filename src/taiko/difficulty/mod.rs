@@ -6,8 +6,7 @@ use crate::{
             skills::peaks::PeaksSkill,
         },
         object::TaikoObject,
-    },
-    Difficulty,
+    }, util::mods::Mods, Difficulty
 };
 
 use self::skills::peaks::Peaks;
@@ -41,8 +40,21 @@ pub fn difficulty(
         ..Default::default()
     };
 
-    let color_rating = peaks.color_difficulty_value();
-    let rhythm_rating = peaks.rhythm_difficulty_value();
+    let mods = difficulty.get_mods();
+
+    let color_rating = if mods.rx() {
+        0.0 
+    } else { 
+        peaks.color_difficulty_value()
+    };
+
+    let rhythm_rating = if mods.rx() {
+        peaks.rhythm_difficulty_value() * 0.875
+    } else {
+        peaks.rhythm_difficulty_value()
+    };
+
+    println!("{}", color_rating);
     let stamina_rating = peaks.stamina_difficulty_value();
     let combined_rating = peaks.difficulty_value();
 

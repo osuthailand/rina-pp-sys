@@ -401,14 +401,20 @@ impl TaikoPerformanceInner {
             multiplier *= 1.075;
         }
 
-        if self.mods.ez() {
+        if self.mods.ez() && self.mods.rx() {
+            multiplier *= 0.9;
+        } else if self.mods.ez() {
             multiplier *= 0.975;
         }
 
         let diff_value = self.compute_difficulty_value(effective_miss_count);
         let acc_value = self.compute_accuracy_value();
 
-        let pp = (diff_value.powf(1.1) + acc_value.powf(1.1)).powf(1.0 / 1.1) * multiplier;
+        let pp = if !self.mods.rx() {
+            (diff_value.powf(1.1) + acc_value.powf(1.1)).powf(1.0 / 1.1) * multiplier
+        } else {
+            (diff_value.powf(1.1) + acc_value.powf(1.2)).powf(1.0 / 1.1) * multiplier
+        };
 
         TaikoPerformanceAttributes {
             difficulty: self.attrs,
@@ -429,7 +435,9 @@ impl TaikoPerformanceInner {
 
         diff_value *= 0.986_f64.powf(effective_miss_count);
 
-        if self.mods.ez() {
+        if self.mods.ez() && self.mods.rx() {
+            diff_value *= 0.9;
+        } else if self.mods.ez() {
             diff_value *= 0.985;
         }
 
@@ -437,13 +445,18 @@ impl TaikoPerformanceInner {
             diff_value *= 1.025;
         }
 
-        if self.mods.hr() {
+        if self.mods.hr() && self.mods.rx() {
+            diff_value *= 1.12;
+        } else if self.mods.hr() {
             diff_value *= 1.05;
         }
 
         if self.mods.fl() {
             diff_value *= 1.05 * len_bonus;
+        } else if self.mods.fl() && self.mods.rx() {
+            diff_value *= 1.12 * len_bonus;
         }
+
 
         let acc = self.custom_accuracy();
 
@@ -455,10 +468,14 @@ impl TaikoPerformanceInner {
             return 0.0;
         }
 
-        let mut acc_value = (60.0 / self.attrs.hit_window).powf(1.1)
-            * self.custom_accuracy().powf(8.0)
-            * self.attrs.stars.powf(0.4)
-            * 27.0;
+        let mut acc_value = if !self.mods.rx() {
+            (60.0 / self.attrs.hit_window).powf(1.1)
+                * self.custom_accuracy().powf(8.0)
+                * self.attrs.stars.powf(0.4)
+                * 27.0
+        } else {
+            self.custom_accuracy().powi(11) / (self.attrs.hit_window * 0.6) * 1800.0
+        };
 
         let len_bonus = (self.total_hits() / 1500.0).powf(0.3).min(1.15);
         acc_value *= len_bonus;
@@ -466,6 +483,8 @@ impl TaikoPerformanceInner {
         // * Slight HDFL Bonus for accuracy. A clamp is used to prevent against negative values
         if self.mods.hd() && self.mods.fl() {
             acc_value *= (1.075 * len_bonus).max(1.05);
+        } else if self.mods.hd() && self.mods.fl() && self.mods.rx() {
+            acc_value *= 1.15 * (len_bonus + 0.2);
         }
 
         acc_value

@@ -606,18 +606,12 @@ impl OsuPerformanceInner {
         // * Penalize misses by assessing # of misses relative to the total # of objects.
         // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            if self.mods.rx() {
-                aim_value *= 0.97
-                    * (0.95 - (self.effective_miss_count / total_hits).powf(1.1))
-                        .powf(self.effective_miss_count);
-            } else {
-                aim_value *= 0.97
-                    * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                        .powf(self.effective_miss_count);
-            }
+            // In the "remove combo scaling" rework, they assume
+            // the scores misses, are done at the hardest parts of the map.
+            // https://github.com/ppy/osu/blob/c25e1bdeb586db8a2def47232632be61b4d4242e/osu.Game.Rulesets.Osu/Difficulty/OsuPerformanceCalculator.cs#L261-L264
+            aim_value *= 0.96 / ((self.effective_miss_count / (4.0 * self.attrs.aim.log10().powf(0.94))) + 1.0);
+   
         }
-
-        aim_value *= self.get_combo_scaling_factor();
 
         let ar_factor = if self.attrs.ar > 10.33 {
             if self.mods.rx() {
@@ -681,12 +675,11 @@ impl OsuPerformanceInner {
         // * Penalize misses by assessing # of misses relative to the total # of objects.
         // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            speed_value *= 0.97
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                    .powf(self.effective_miss_count.powf(0.875));
+            // In the "remove combo scaling" rework, they assume
+            // the scores misses, are done at the hardest parts of the map.
+            // https://github.com/ppy/osu/blob/c25e1bdeb586db8a2def47232632be61b4d4242e/osu.Game.Rulesets.Osu/Difficulty/OsuPerformanceCalculator.cs#L261-L264
+            speed_value *= 0.96 / ((self.effective_miss_count / (4.0 * self.attrs.speed.log10().powf(0.94))) + 1.0);
         }
-
-        speed_value *= self.get_combo_scaling_factor();
 
         let ar_factor = if self.attrs.ar > 10.33 {
             0.3 * (self.attrs.ar - 10.33)
@@ -721,8 +714,16 @@ impl OsuPerformanceInner {
         };
 
         // * Scale the speed value with accuracy and OD.
-        speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
+        if self.mods.rx() {
+            // As OD doesn't matter when you play relax,
+            // we should remove it from the equation and
+            // increase accuracy's importance to compensate.
+            // try out some stuff with this untill it's fitting...
+            speed_value *= 0.6 + 0.13 * ((self.acc.powi(2) + relevant_acc.powi(2))).powf(2.2);
+        } else {
+            speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
+                * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
+        }
 
         // * Scale the speed value with # of 50s to punish doubletapping.
         speed_value *= 0.99_f64.powf(
@@ -810,8 +811,6 @@ impl OsuPerformanceInner {
     fn get_combo_scaling_factor(&self) -> f64 {
         if self.attrs.max_combo == 0 {
             1.0
-        } else if self.mods.rx() {
-            (f64::from(self.state.max_combo).sqrt() / f64::from(self.attrs.max_combo).sqrt()).powf(0.84).min(1.0)
         } else {
             (f64::from(self.state.max_combo).powf(0.8) / f64::from(self.attrs.max_combo).powf(0.8))
                 .min(1.0)
