@@ -1,4 +1,4 @@
-use std::cmp;
+use std::{cmp, f64::consts::E};
 
 use rosu_map::{section::general::GameMode};
 
@@ -609,7 +609,7 @@ impl OsuPerformanceInner {
             // In the "remove combo scaling" rework, they assume
             // the scores misses, are done at the hardest parts of the map.
             // https://github.com/ppy/osu/blob/c25e1bdeb586db8a2def47232632be61b4d4242e/osu.Game.Rulesets.Osu/Difficulty/OsuPerformanceCalculator.cs#L261-L264
-            aim_value *= 0.96 / ((self.effective_miss_count / (4.0 * self.attrs.aim_strain_difficulty.log10().max(0.0).powf(0.94))) + 1.0);
+            aim_value *= 0.96 / ((self.effective_miss_count / (4.0 * self.attrs.aim_strain_difficulty.log(E).max(0.0).powf(0.94))) + 1.0);
    
         }
 
@@ -674,12 +674,11 @@ impl OsuPerformanceInner {
 
         // * Penalize misses by assessing # of misses relative to the total # of objects.
         // * Default a 3% reduction for any # of misses.
-        println!("{}", self.attrs.speed_strain_difficulty);
         if self.effective_miss_count > 0.0 {
             // In the "remove combo scaling" rework, they assume
             // the scores misses, are done at the hardest parts of the map.
             // https://github.com/ppy/osu/blob/c25e1bdeb586db8a2def47232632be61b4d4242e/osu.Game.Rulesets.Osu/Difficulty/OsuPerformanceCalculator.cs#L261-L264
-            speed_value *= 0.96 / ((self.effective_miss_count / (4.0 * self.attrs.speed_strain_difficulty.log10().max(0.0).powf(0.94))) + 1.0);
+            speed_value *= 0.96 / ((self.effective_miss_count / (4.0 * self.attrs.speed_strain_difficulty.log(E).max(0.0).powf(0.94))) + 1.0);
         }
 
         let ar_factor = if self.attrs.ar > 10.33 {

@@ -144,7 +144,7 @@ impl<'a> Skill<'a, Speed> {
         } else {
             self.inner.object_strains
                 .iter()
-                .map(|&strain| 1.1 / (1.0 + ((-10.0 * (strain / (difficulty - 10.0) - 0.88)) as f64).exp()))
+                .map(|&strain| 1.1 / (1.0 + ((-10.0 * (strain / (difficulty / 1.06 / 10.0) - 0.88)) as f64).exp()))
                 .sum()
         }
     }

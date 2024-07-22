@@ -5,3 +5,4 @@ output*
 /tests/custom.rs
 examples/
 .vscode
+/src/main.rs

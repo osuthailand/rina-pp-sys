@@ -549,7 +549,6 @@ where
 
 impl AssertEq for OsuDifficultyAttributes {
     fn assert_eq(&self, expected: &Self) {
-        println!("{} - {}", self.aim_strain_difficulty, expected.aim);
         assert_eq_float(self.aim, expected.aim);
         assert_eq_float(self.speed, expected.speed);
         assert_eq_float(self.flashlight, expected.flashlight);
